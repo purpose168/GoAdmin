@@ -1,8 +1,8 @@
 package guard
 
 import (
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/errors"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/errors"
 )
 
 type MenuDeleteParam struct {

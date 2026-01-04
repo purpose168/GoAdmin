@@ -6,14 +6,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/config"
-	"github.com/GoAdminGroup/go-admin/modules/constant"
-	"github.com/GoAdminGroup/go-admin/modules/language"
-	"github.com/GoAdminGroup/go-admin/modules/utils"
-	template2 "github.com/GoAdminGroup/go-admin/template"
-	"github.com/GoAdminGroup/go-admin/template/icon"
-	"github.com/GoAdminGroup/go-admin/template/types"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/config"
+	"github.com/purpose168/GoAdmin/modules/constant"
+	"github.com/purpose168/GoAdmin/modules/language"
+	"github.com/purpose168/GoAdmin/modules/utils"
+	template2 "github.com/purpose168/GoAdmin/template"
+	"github.com/purpose168/GoAdmin/template/icon"
+	"github.com/purpose168/GoAdmin/template/types"
 )
 
 type PopUpAction struct {
@@ -185,7 +185,7 @@ func PopUpWithForm(data PopUpData, fn GetForm, url string) *PopUpAction {
 				SetPrefix(config.PrefixFixSlash()).
 				SetUrl(url).
 				SetOperationFooter(col1 + col2).GetContent()).
-				SetStyle(template.HTMLAttr(`overflow-x: hidden;overflow-y: hidden;`)).
+			SetStyle(template.HTMLAttr(`overflow-x: hidden;overflow-y: hidden;`)).
 			GetContent()
 	}
 	return &PopUpAction{

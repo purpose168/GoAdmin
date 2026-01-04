@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoAdminGroup/go-admin/modules/config"
-	"github.com/GoAdminGroup/go-admin/tests/frameworks/gin"
+	"github.com/purpose168/GoAdmin/modules/config"
+	"github.com/purpose168/GoAdmin/tests/frameworks/gin"
 )
 
 func TestBlackBoxTestSuitOfBuiltInTables(t *testing.T) {

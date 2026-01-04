@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/file"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/constant"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/guard"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/response"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/file"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/constant"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/guard"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/response"
 )
 
 func (h *Handler) ApiCreate(ctx *context.Context) {

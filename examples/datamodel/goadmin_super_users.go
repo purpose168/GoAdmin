@@ -1,10 +1,10 @@
 package datamodel
 
 import (
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/db"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/table"
-	"github.com/GoAdminGroup/go-admin/template/types/form"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/db"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/table"
+	"github.com/purpose168/GoAdmin/template/types/form"
 )
 
 func GetGoadminSuperUsersTable(ctx *context.Context) table.Table {

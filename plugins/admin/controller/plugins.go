@@ -10,24 +10,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoAdminGroup/go-admin/modules/system"
+	"github.com/purpose168/GoAdmin/modules/system"
 
-	"github.com/GoAdminGroup/go-admin/modules/logger"
+	"github.com/purpose168/GoAdmin/modules/logger"
 
-	"github.com/GoAdminGroup/go-admin/modules/config"
+	"github.com/purpose168/GoAdmin/modules/config"
 
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/auth"
-	"github.com/GoAdminGroup/go-admin/modules/language"
-	"github.com/GoAdminGroup/go-admin/modules/remote_server"
-	"github.com/GoAdminGroup/go-admin/modules/utils"
-	"github.com/GoAdminGroup/go-admin/plugins"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/guard"
-	template2 "github.com/GoAdminGroup/go-admin/template"
-	"github.com/GoAdminGroup/go-admin/template/types"
-	"github.com/GoAdminGroup/go-admin/template/types/form"
 	"github.com/GoAdminGroup/html"
 	"github.com/gin-gonic/gin"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/auth"
+	"github.com/purpose168/GoAdmin/modules/language"
+	"github.com/purpose168/GoAdmin/modules/remote_server"
+	"github.com/purpose168/GoAdmin/modules/utils"
+	"github.com/purpose168/GoAdmin/plugins"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/guard"
+	template2 "github.com/purpose168/GoAdmin/template"
+	"github.com/purpose168/GoAdmin/template/types"
+	"github.com/purpose168/GoAdmin/template/types/form"
 )
 
 func (h *Handler) Plugins(ctx *context.Context) {

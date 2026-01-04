@@ -12,8 +12,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GoAdminGroup/go-admin/modules/db/dialect"
-	"github.com/GoAdminGroup/go-admin/modules/logger"
+	"github.com/purpose168/GoAdmin/modules/db/dialect"
+	"github.com/purpose168/GoAdmin/modules/logger"
 )
 
 // SQL wraps the Connection and driver dialect methods.

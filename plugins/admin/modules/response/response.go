@@ -3,15 +3,15 @@ package response
 import (
 	"net/http"
 
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/auth"
-	"github.com/GoAdminGroup/go-admin/modules/config"
-	"github.com/GoAdminGroup/go-admin/modules/db"
-	"github.com/GoAdminGroup/go-admin/modules/errors"
-	"github.com/GoAdminGroup/go-admin/modules/language"
-	"github.com/GoAdminGroup/go-admin/modules/menu"
-	"github.com/GoAdminGroup/go-admin/template"
-	"github.com/GoAdminGroup/go-admin/template/types"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/auth"
+	"github.com/purpose168/GoAdmin/modules/config"
+	"github.com/purpose168/GoAdmin/modules/db"
+	"github.com/purpose168/GoAdmin/modules/errors"
+	"github.com/purpose168/GoAdmin/modules/language"
+	"github.com/purpose168/GoAdmin/modules/menu"
+	"github.com/purpose168/GoAdmin/template"
+	"github.com/purpose168/GoAdmin/template/types"
 )
 
 func Ok(ctx *context.Context) {

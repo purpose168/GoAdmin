@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/constant"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/parameter"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/response"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/constant"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/parameter"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/response"
 )
 
 func (h *Handler) ApiList(ctx *context.Context) {

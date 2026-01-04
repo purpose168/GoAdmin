@@ -1,51 +1,95 @@
+# Docker Compose 文件版本
 version: "3.3"
+
+# 定义服务列表
 services:
+  # MySQL 数据库服务
   mysql:
+    # 使用 MySQL 5.6 版本的镜像
     image: mysql:5.6
+    # 容器名称
     container_name: mysql
+    # 端口映射：将宿主机的 3306 端口映射到容器的 3306 端口
     ports:
       - "3306:3306"
+    # 数据卷挂载：将 mysql 数据卷挂载到容器的 /data 目录，用于持久化数据
     volumes:
       - mysql:/data
+    # 连接到 goadmin 网络
     networks:
       - goadmin
+    # 环境变量：设置 MySQL root 用户密码
     environment:
       - MYSQL_ROOT_PASSWORD=goadmin
+  
+  # PostgreSQL 数据库服务
   postgres:
+    # 使用最新版本的 PostgreSQL 镜像
     image: postgres:latest
+    # 容器名称
     container_name: postgres
+    # 端口映射：将宿主机的 5432 端口映射到容器的 5432 端口
     ports:
       - "5432:5432"
+    # 数据卷挂载：将 postgres 数据卷挂载到容器的 /data 目录，用于持久化数据
     volumes:
       - postgres:/data
+    # 连接到 goadmin 网络
     networks:
       - goadmin
+    # 环境变量：设置 PostgreSQL 超级用户密码
     environment:
       - POSTGRES_PASSWORD=goadmin
+  
+  # GoAdmin 开发环境服务
   goadmin:
+    # 使用 GoAdmin 1.1 版本的镜像
     image: josingcjx/goadmin:1.1
+    # 分配伪终端，保持容器运行
     tty: true
+    # 容器名称
     container_name: goadmin
+    # 数据卷挂载：将当前目录挂载到容器的 /home/goadmin 目录，实现代码实时同步
     volumes:
       - .:/home/goadmin
+    # 连接到 goadmin 网络
     networks:
       - goadmin
+    # 启动命令：运行 bash shell
     command:
       - /bin/bash
+  
+  # Portainer 容器管理服务
   portainer:
+    # 使用最新版本的 Portainer 镜像
     image: portainer/portainer:latest
+    # 容器名称
     container_name: portainer
+    # 重启策略：总是自动重启
     restart: always
+    # 端口映射：将宿主机的 9000 端口映射到容器的 9000 端口
     ports:
       - "9000:9000"
+    # 连接到 goadmin 网络
     networks:
       - goadmin
+    # 数据卷挂载：
+    # - 将宿主机的 Docker socket 挂载到容器，使 Portainer 可以管理 Docker
+    # - 将 portainer 数据卷挂载到容器的 /data 目录，用于持久化数据
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer:/data
+
+# 定义网络
 networks:
+  # goadmin 网络配置
   goadmin: {}
+
+# 定义数据卷
 volumes:
+  # Portainer 数据卷
   portainer: {}
+  # PostgreSQL 数据卷
   postgres: {}
+  # MySQL 数据卷
   mysql: {}

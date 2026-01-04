@@ -1,6 +1,6 @@
 package datamodel
 
-import "github.com/GoAdminGroup/go-admin/plugins/admin/modules/table"
+import "github.com/purpose168/GoAdmin/plugins/admin/modules/table"
 
 // Generators is a map of table models.
 //
@@ -13,7 +13,6 @@ import "github.com/GoAdminGroup/go-admin/plugins/admin/modules/table"
 //
 // "posts"   => http://localhost:9033/admin/info/posts
 // "authors" => http://localhost:9033/admin/info/authors
-//
 var Generators = map[string]table.Generator{
 	"posts":   GetPostsTable,
 	"authors": GetAuthorsTable,

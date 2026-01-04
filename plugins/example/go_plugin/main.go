@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/auth"
-	c "github.com/GoAdminGroup/go-admin/modules/config"
-	"github.com/GoAdminGroup/go-admin/modules/db"
-	"github.com/GoAdminGroup/go-admin/modules/service"
-	"github.com/GoAdminGroup/go-admin/plugins"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/auth"
+	c "github.com/purpose168/GoAdmin/modules/config"
+	"github.com/purpose168/GoAdmin/modules/db"
+	"github.com/purpose168/GoAdmin/modules/service"
+	"github.com/purpose168/GoAdmin/plugins"
 )
 
 type Example struct {

@@ -9,17 +9,17 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/GoAdminGroup/go-admin/adapter/nethttp"
-	_ "github.com/GoAdminGroup/go-admin/modules/db/drivers/mysql"
+	_ "github.com/purpose168/GoAdmin/adapter/nethttp"
+	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"
 
-	"github.com/GoAdminGroup/go-admin/engine"
-	"github.com/GoAdminGroup/go-admin/examples/datamodel"
-	"github.com/GoAdminGroup/go-admin/modules/config"
-	"github.com/GoAdminGroup/go-admin/modules/language"
-	"github.com/GoAdminGroup/go-admin/plugins/example"
-	"github.com/GoAdminGroup/go-admin/template"
-	"github.com/GoAdminGroup/go-admin/template/chartjs"
 	"github.com/GoAdminGroup/themes/adminlte"
+	"github.com/purpose168/GoAdmin/engine"
+	"github.com/purpose168/GoAdmin/examples/datamodel"
+	"github.com/purpose168/GoAdmin/modules/config"
+	"github.com/purpose168/GoAdmin/modules/language"
+	"github.com/purpose168/GoAdmin/plugins/example"
+	"github.com/purpose168/GoAdmin/template"
+	"github.com/purpose168/GoAdmin/template/chartjs"
 )
 
 func main() {

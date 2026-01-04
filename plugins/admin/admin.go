@@ -1,18 +1,18 @@
 package admin
 
 import (
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/config"
-	"github.com/GoAdminGroup/go-admin/modules/service"
-	"github.com/GoAdminGroup/go-admin/modules/system"
-	"github.com/GoAdminGroup/go-admin/modules/utils"
-	"github.com/GoAdminGroup/go-admin/plugins"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/controller"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/guard"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/table"
-	"github.com/GoAdminGroup/go-admin/template/types"
-	"github.com/GoAdminGroup/go-admin/template/types/action"
-	_ "github.com/GoAdminGroup/go-admin/template/types/display"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/config"
+	"github.com/purpose168/GoAdmin/modules/service"
+	"github.com/purpose168/GoAdmin/modules/system"
+	"github.com/purpose168/GoAdmin/modules/utils"
+	"github.com/purpose168/GoAdmin/plugins"
+	"github.com/purpose168/GoAdmin/plugins/admin/controller"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/guard"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/table"
+	"github.com/purpose168/GoAdmin/template/types"
+	"github.com/purpose168/GoAdmin/template/types/action"
+	_ "github.com/purpose168/GoAdmin/template/types/display"
 )
 
 // Admin is a GoAdmin plugin.

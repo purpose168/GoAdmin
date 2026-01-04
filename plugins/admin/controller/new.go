@@ -5,21 +5,21 @@ import (
 	template2 "html/template"
 	"net/http"
 
-	"github.com/GoAdminGroup/go-admin/template"
+	"github.com/purpose168/GoAdmin/template"
 
-	"github.com/GoAdminGroup/go-admin/modules/logger"
+	"github.com/purpose168/GoAdmin/modules/logger"
 
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/response"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/response"
 
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/auth"
-	"github.com/GoAdminGroup/go-admin/modules/file"
-	"github.com/GoAdminGroup/go-admin/modules/language"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/constant"
-	form2 "github.com/GoAdminGroup/go-admin/plugins/admin/modules/form"
-	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/guard"
-	"github.com/GoAdminGroup/go-admin/template/types"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/auth"
+	"github.com/purpose168/GoAdmin/modules/file"
+	"github.com/purpose168/GoAdmin/modules/language"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/constant"
+	form2 "github.com/purpose168/GoAdmin/plugins/admin/modules/form"
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/guard"
+	"github.com/purpose168/GoAdmin/template/types"
 )
 
 // ShowNewForm show a new form page.

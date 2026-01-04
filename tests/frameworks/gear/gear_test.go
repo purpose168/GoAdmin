@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/GoAdminGroup/go-admin/tests/common"
 	"github.com/gavv/httpexpect"
+	"github.com/purpose168/GoAdmin/tests/common"
 )
 
 func TestGear(t *testing.T) {

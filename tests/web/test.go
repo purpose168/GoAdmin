@@ -7,9 +7,9 @@ import (
 
 	"github.com/mgutz/ansi"
 
-	_ "github.com/GoAdminGroup/go-admin/adapter/gin"
-	_ "github.com/GoAdminGroup/go-admin/modules/db/drivers/mysql"
 	_ "github.com/GoAdminGroup/themes/adminlte"
+	_ "github.com/purpose168/GoAdmin/adapter/gin"
+	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"
 
 	"github.com/sclevine/agouti"
 )

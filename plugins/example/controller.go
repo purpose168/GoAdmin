@@ -3,18 +3,18 @@ package example
 import (
 	"html/template"
 
-	"github.com/GoAdminGroup/go-admin/context"
-	"github.com/GoAdminGroup/go-admin/modules/auth"
-	"github.com/GoAdminGroup/go-admin/modules/page"
-	template2 "github.com/GoAdminGroup/go-admin/template"
-	"github.com/GoAdminGroup/go-admin/template/chartjs"
-	"github.com/GoAdminGroup/go-admin/template/types"
 	"github.com/GoAdminGroup/themes/adminlte/components/chart_legend"
 	"github.com/GoAdminGroup/themes/adminlte/components/description"
 	"github.com/GoAdminGroup/themes/adminlte/components/infobox"
 	"github.com/GoAdminGroup/themes/adminlte/components/productlist"
 	"github.com/GoAdminGroup/themes/adminlte/components/progress_group"
 	"github.com/GoAdminGroup/themes/adminlte/components/smallbox"
+	"github.com/purpose168/GoAdmin/context"
+	"github.com/purpose168/GoAdmin/modules/auth"
+	"github.com/purpose168/GoAdmin/modules/page"
+	template2 "github.com/purpose168/GoAdmin/template"
+	"github.com/purpose168/GoAdmin/template/chartjs"
+	"github.com/purpose168/GoAdmin/template/types"
 )
 
 func (e *Example) TestHandler(rawCtx *context.Context) {

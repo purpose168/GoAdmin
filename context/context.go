@@ -2,6 +2,43 @@
 // Use of this source code is governed by a Apache-2.0 style
 // license that can be found in the LICENSE file.
 
+// context包提供了HTTP请求和响应的上下文管理
+// 该包是GoAdmin框架的核心组件之一，提供了轻量级的请求/响应处理机制
+//
+// 主要功能：
+//   - Context结构体：封装HTTP请求和响应，提供便捷的访问方法
+//   - App结构体：路由管理器，支持路由注册和中间件
+//   - RouterGroup结构体：路由分组，支持前缀和中间件
+//   - 路径处理：提供路径标准化和连接功能
+//
+// 设计理念：
+//   - 简化Web框架上下文，提供框架无关的接口
+//   - 支持中间件模式，实现请求处理链
+//   - 提供丰富的辅助方法，简化常见操作
+//   - 支持路由参数和通配符
+//
+// 核心组件：
+//   - Context：请求上下文，包含Request、Response和UserValue
+//   - App：应用实例，管理路由和处理器
+//   - RouterGroup：路由分组，支持嵌套和前缀
+//   - Handler：处理器函数类型
+//   - Handlers：处理器链类型
+//
+// 使用场景：
+//   - 插件开发：在插件中使用Context处理请求和响应
+//   - 适配器开发：将Web框架的上下文转换为Context
+//   - 路由管理：使用App和RouterGroup注册路由
+//   - 中间件开发：实现请求拦截和处理
+//
+// 注意事项：
+//   - Context是轻量级的，不包含Web框架特定的功能
+//   - 适配器负责将Context转换为Web框架的上下文
+//   - 中间件必须调用Next()才能继续处理链
+//   - 路由参数使用:__前缀标识
+//
+// 作者: GoAdmin Core Team
+// 创建日期: 2019-01-01
+// 版本: 1.0.0
 package context
 
 import (
@@ -19,17 +56,31 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoAdminGroup/go-admin/modules/constant"
+	"github.com/purpose168/GoAdmin/modules/constant"
 )
 
 const abortIndex int8 = math.MaxInt8 / 2
 
-// Context is the simplify version of web framework context.
-// But it is important which will be used in plugins to custom
-// the request and response. And adapter will help to transform
-// the Context to the web framework`s context. It has three attributes.
-// Request and response are belongs to net/http package. UserValue
-// is the custom key-value store of context.
+// Context结构体是Web框架上下文的简化版本
+// 它是GoAdmin框架的核心组件，用于在插件中自定义请求和响应处理
+// 适配器负责将Context转换为Web框架的上下文
+//
+// 字段说明：
+//   - Request: HTTP请求对象，来自net/http包
+//   - Response: HTTP响应对象，来自net/http包
+//   - UserValue: 用户自定义的键值对存储，用于在处理器链中传递数据
+//   - index: 当前处理器在处理器链中的索引，用于中间件控制
+//   - handlers: 处理器链，包含所有要执行的处理器
+//
+// 使用场景：
+//   - 在插件中访问请求和响应
+//   - 在中间件中控制请求处理流程
+//   - 在处理器链中传递数据
+//
+// 注意事项：
+//   - Request和Response属于net/http包，不是Web框架特定的类型
+//   - UserValue是线程安全的，每个请求都有独立的副本
+//   - index用于Abort()和Next()方法控制处理流程
 type Context struct {
 	Request   *http.Request
 	Response  *http.Response
@@ -38,29 +89,80 @@ type Context struct {
 	handlers  Handlers
 }
 
-// Path is used in the matching of request and response. Url stores the
-// raw register url. RegUrl contains the wildcard which on behalf of
-// the route params.
+// Path结构体用于请求和响应的匹配
+//
+// 字段说明：
+//   - URL: 原始注册的URL路径
+//   - Method: HTTP方法（GET、POST、PUT、DELETE等）
+//
+// 使用场景：
+//   - 作为路由表的键
+//   - 匹配请求路径和方法
+//   - 存储路由信息
 type Path struct {
 	URL    string
 	Method string
 }
 
+// RouterMap是路由器的映射类型
+// 键为路由名称，值为Router对象
 type RouterMap map[string]Router
 
+// Get从RouterMap中获取指定名称的路由器
+//
+// 参数说明：
+//   - name: 路由器名称
+//
+// 返回值：
+//   - Router: 路由器对象，如果不存在则返回零值
 func (r RouterMap) Get(name string) Router {
 	return r[name]
 }
 
+// Router结构体表示一个路由器
+//
+// 字段说明：
+//   - Methods: 支持的HTTP方法列表
+//   - Patten: 路由模式，可能包含参数占位符
+//
+// 使用场景：
+//   - 定义路由的HTTP方法
+//   - 存储路由模式
+//   - 生成URL
 type Router struct {
 	Methods []string
 	Patten  string
 }
 
+// Method返回路由器的第一个HTTP方法
+//
+// 返回值：
+//   - string: 第一个HTTP方法
+//
+// 使用场景：
+//   - 获取路由的主要方法
+//   - 用于路由匹配
 func (r Router) Method() string {
 	return r.Methods[0]
 }
 
+// GetURL根据给定的参数值生成完整的URL
+//
+// 参数说明：
+//   - value: 参数键值对，格式为[key1, value1, key2, value2, ...]
+//
+// 返回值：
+//   - string: 替换参数后的完整URL
+//
+// 工作原理：
+//   - 遍历参数对
+//   - 将路由模式中的:__key替换为对应的value
+//
+// 使用示例：
+//
+//	router := Router{Patten: "/user/:__id/info/:__type"}
+//	url := router.GetURL("id", "123", "type", "detail")
+//	// url = "/user/123/info/detail"
 func (r Router) GetURL(value ...string) string {
 	u := r.Patten
 	for i := 0; i < len(value); i += 2 {
@@ -69,8 +171,17 @@ func (r Router) GetURL(value ...string) string {
 	return u
 }
 
+// NodeProcessor是节点处理器函数类型
+// 用于处理面板中的节点
 type NodeProcessor func(...Node)
 
+// Node结构体表示一个路由节点
+//
+// 字段说明：
+//   - Path: 路由路径
+//   - Method: HTTP方法
+//   - Handlers: 处理器链
+//   - Value: 节点的自定义值
 type Node struct {
 	Path     string
 	Method   string
@@ -78,27 +189,96 @@ type Node struct {
 	Value    map[string]interface{}
 }
 
-// SetUserValue set the value of user context.
+// SetUserValue设置用户上下文的值
+//
+// 参数说明：
+//   - key: 键名
+//   - value: 键值
+//
+// 使用场景：
+//   - 在中间件中设置数据供后续处理器使用
+//   - 在处理器链中传递数据
+//   - 存储请求级别的数据
+//
+// 使用示例：
+//
+//	ctx.SetUserValue("userID", "123")
+//	userID := ctx.GetUserValue("userID")
 func (ctx *Context) SetUserValue(key string, value interface{}) {
 	ctx.UserValue[key] = value
 }
 
-// GetUserValue get the value of key.
+// GetUserValue获取指定键的值
+//
+// 参数说明：
+//   - key: 键名
+//
+// 返回值：
+//   - interface{}: 键对应的值，如果不存在则返回nil
+//
+// 使用场景：
+//   - 从中间件中获取之前设置的数据
+//   - 在处理器链中传递数据
 func (ctx *Context) GetUserValue(key string) interface{} {
 	return ctx.UserValue[key]
 }
 
-// Path return the url path.
+// Path返回请求的URL路径
+//
+// 返回值：
+//   - string: URL路径，如"/admin/users"
+//
+// 使用场景：
+//   - 路由匹配
+//   - 权限验证
+//   - 日志记录
 func (ctx *Context) Path() string {
 	return ctx.Request.URL.Path
 }
 
-// Abort abort the context.
+// Abort中止上下文的处理
+//
+// 工作原理：
+//   - 将index设置为abortIndex（最大int8值的一半）
+//   - 这样Next()方法会立即停止执行后续处理器
+//
+// 使用场景：
+//   - 在中间件中拒绝请求
+//   - 权限验证失败时停止处理
+//   - 错误处理时提前返回
+//
+// 使用示例：
+//
+//	if !hasPermission {
+//	    ctx.Abort()
+//	    return
+//	}
 func (ctx *Context) Abort() {
 	ctx.index = abortIndex
 }
 
-// Next should be used only inside middleware.
+// Next应该在中间件内部使用
+//
+// 工作原理：
+//   - 递增index
+//   - 执行下一个处理器
+//   - 直到所有处理器执行完毕或被Abort()
+//
+// 使用场景：
+//   - 在中间件中传递控制权给下一个处理器
+//   - 实现请求处理链
+//
+// 注意事项：
+//   - 必须在中间件中调用，否则请求处理会停止
+//   - 调用Next()后，后续中间件会在Next()返回后继续执行
+//
+// 使用示例：
+//
+//	func middleware(ctx *context.Context) {
+//	    ctx.SetUserValue("start", time.Now())
+//	    ctx.Next()
+//	    duration := time.Since(ctx.GetUserValue("start").(time.Time))
+//	}
 func (ctx *Context) Next() {
 	ctx.index++
 	for s := int8(len(ctx.handlers)); ctx.index < s; ctx.index++ {
@@ -106,19 +286,52 @@ func (ctx *Context) Next() {
 	}
 }
 
-// SetHandlers set the handlers of Context.
+// SetHandlers设置Context的处理器链
+//
+// 参数说明：
+//   - handlers: 处理器链
+//
+// 返回值：
+//   - *Context: 返回Context本身，支持链式调用
+//
+// 使用场景：
+//   - 在路由匹配后设置处理器链
+//   - 初始化请求处理
 func (ctx *Context) SetHandlers(handlers Handlers) *Context {
 	ctx.handlers = handlers
 	return ctx
 }
 
-// Method return the request method.
+// Method返回请求的HTTP方法
+//
+// 返回值：
+//   - string: HTTP方法，如GET、POST、PUT、DELETE等
+//
+// 使用场景：
+//   - 区分不同类型的请求
+//   - 权限控制
+//   - 日志记录
 func (ctx *Context) Method() string {
 	return ctx.Request.Method
 }
 
-// NewContext used in adapter which return a Context with request
-// and slice of UserValue and a default Response.
+// NewContext在适配器中使用，返回一个包含请求、UserValue和默认Response的Context
+//
+// 参数说明：
+//   - req: HTTP请求对象
+//
+// 返回值：
+//   - *Context: 新创建的Context对象
+//
+// 工作原理：
+//   - 创建Context结构体
+//   - 初始化UserValue为空map
+//   - 初始化Response为默认状态（200 OK）
+//   - 初始化index为-1
+//
+// 使用场景：
+//   - 适配器将Web框架的请求转换为Context
+//   - 创建新的请求上下文
 func NewContext(req *http.Request) *Context {
 
 	return &Context{
@@ -505,9 +718,24 @@ func (ctx *Context) ServeFile(filename string, gzipCompression bool) error {
 
 type HandlerMap map[Path]Handlers
 
-// App is the key struct of the package. App as a member of plugin
-// entity contains the request and the corresponding handler. Prefix
-// is the url prefix and MiddlewareList is for control flow.
+// App结构体是包的核心结构体
+// App作为插件实体的成员，包含请求和对应的处理器
+// Prefix是URL前缀，MiddlewareList用于控制流程
+//
+// 字段说明：
+//   - Requests: 请求路径列表
+//   - Handlers: 处理器映射，键为Path，值为处理器链
+//   - Middlewares: 中间件列表，用于控制请求流程
+//   - Prefix: URL前缀，用于路由分组
+//   - Routers: 路由器映射，键为路由名称
+//   - routeIndex: 路由索引，用于跟踪当前路由
+//   - routeANY: 是否为ANY路由（匹配所有HTTP方法）
+//
+// 使用场景：
+//   - 插件中定义路由
+//   - 管理中间件
+//   - 分组路由
+//   - 生成路由URL
 type App struct {
 	Requests    []Path
 	Handlers    HandlerMap
@@ -519,7 +747,22 @@ type App struct {
 	routeANY   bool
 }
 
-// NewApp return an empty app.
+// NewApp返回一个空的App实例
+//
+// 返回值：
+//   - *App: 新创建的App实例
+//
+// 工作原理：
+//   - 初始化Requests为空切片
+//   - 初始化Handlers为空映射
+//   - 设置Prefix为"/"
+//   - 初始化Middlewares为空切片
+//   - 设置routeIndex为-1
+//   - 初始化Routers为空映射
+//
+// 使用场景：
+//   - 创建新的应用实例
+//   - 初始化插件路由
 func NewApp() *App {
 	return &App{
 		Requests:    make([]Path, 0),
@@ -531,21 +774,48 @@ func NewApp() *App {
 	}
 }
 
-// Handler defines the handler used by the middleware as return value.
+// Handler定义了中间件使用的处理器函数类型
+//
+// 参数说明：
+//   - ctx: 上下文对象
+//
+// 使用场景：
+//   - 定义路由处理器
+//   - 定义中间件
+//   - 定义错误处理器
 type Handler func(ctx *Context)
 
-// Handlers is the array of Handler
+// Handlers是Handler的数组类型
+//
+// 使用场景：
+//   - 处理器链
+//   - 中间件列表
 type Handlers []Handler
 
-// AppendReqAndResp stores the request info and handle into app.
-// support the route parameter. The route parameter will be recognized as
-// wildcard store into the RegUrl of Path struct. For example:
+// AppendReqAndResp将请求信息和处理器存储到app中
+// 支持路由参数。路由参数将被识别为通配符存储到Path结构的RegUrl中
+//
+// 路由参数示例：
 //
 //	/user/:id      => /user/(.*)
 //	/user/:id/info => /user/(.*?)/info
 //
-// The RegUrl will be used to recognize the incoming path and find
-// the handler.
+// # RegUrl将用于识别传入的路径并查找处理器
+//
+// 参数说明：
+//   - url: 路由路径
+//   - method: HTTP方法
+//   - handler: 处理器链
+//
+// 工作原理：
+//   - 将路径添加到Requests列表
+//   - 递增routeIndex
+//   - 将处理器添加到Handlers映射
+//   - 处理器包含所有中间件和最终处理器
+//
+// 使用场景：
+//   - 注册路由
+//   - 添加处理器
 func (app *App) AppendReqAndResp(url, method string, handler []Handler) {
 
 	app.Requests = append(app.Requests, Path{
@@ -560,56 +830,148 @@ func (app *App) AppendReqAndResp(url, method string, handler []Handler) {
 	}] = append(app.Middlewares, handler...)
 }
 
-// Find is public helper method for findPath of tree.
+// Find是findPath的公共辅助方法
+//
+// 参数说明：
+//   - url: 请求URL
+//   - method: HTTP方法
+//
+// 返回值：
+//   - []Handler: 处理器链，如果不存在则返回nil
+//
+// 使用场景：
+//   - 查找路由处理器
+//   - 路由匹配
 func (app *App) Find(url, method string) []Handler {
 	app.routeANY = false
 	return app.Handlers[Path{URL: url, Method: method}]
 }
 
-// POST is a shortcut for app.AppendReqAndResp(url, "post", handler).
+// POST是app.AppendReqAndResp(url, "post", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用示例：
+//
+//	app.POST("/users", handler1, handler2)
 func (app *App) POST(url string, handler ...Handler) *App {
 	app.routeANY = false
 	app.AppendReqAndResp(url, "post", handler)
 	return app
 }
 
-// GET is a shortcut for app.AppendReqAndResp(url, "get", handler).
+// GET是app.AppendReqAndResp(url, "get", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用示例：
+//
+//	app.GET("/users", handler1, handler2)
 func (app *App) GET(url string, handler ...Handler) *App {
 	app.routeANY = false
 	app.AppendReqAndResp(url, "get", handler)
 	return app
 }
 
-// DELETE is a shortcut for app.AppendReqAndResp(url, "delete", handler).
+// DELETE是app.AppendReqAndResp(url, "delete", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用示例：
+//
+//	app.DELETE("/users/:id", handler)
 func (app *App) DELETE(url string, handler ...Handler) *App {
 	app.routeANY = false
 	app.AppendReqAndResp(url, "delete", handler)
 	return app
 }
 
-// PUT is a shortcut for app.AppendReqAndResp(url, "put", handler).
+// PUT是app.AppendReqAndResp(url, "put", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用示例：
+//
+//	app.PUT("/users/:id", handler)
 func (app *App) PUT(url string, handler ...Handler) *App {
 	app.routeANY = false
 	app.AppendReqAndResp(url, "put", handler)
 	return app
 }
 
-// OPTIONS is a shortcut for app.AppendReqAndResp(url, "options", handler).
+// OPTIONS是app.AppendReqAndResp(url, "options", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用示例：
+//
+//	app.OPTIONS("/users", handler)
 func (app *App) OPTIONS(url string, handler ...Handler) *App {
 	app.routeANY = false
 	app.AppendReqAndResp(url, "options", handler)
 	return app
 }
 
-// HEAD is a shortcut for app.AppendReqAndResp(url, "head", handler).
+// HEAD是app.AppendReqAndResp(url, "head", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用示例：
+//
+//	app.HEAD("/users", handler)
 func (app *App) HEAD(url string, handler ...Handler) *App {
 	app.routeANY = false
 	app.AppendReqAndResp(url, "head", handler)
 	return app
 }
 
-// ANY registers a route that matches all the HTTP methods.
-// GET, POST, PUT, HEAD, OPTIONS, DELETE.
+// ANY注册一个匹配所有HTTP方法的路由
+// 包括：GET、POST、PUT、HEAD、OPTIONS、DELETE
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *App: 返回App本身，支持链式调用
+//
+// 使用场景：
+//   - 需要处理所有HTTP方法的路由
+//   - 简化路由注册
+//
+// 使用示例：
+//
+//	app.ANY("/api", handler)
 func (app *App) ANY(url string, handler ...Handler) *App {
 	app.routeANY = true
 	app.AppendReqAndResp(url, "post", handler)
@@ -621,6 +983,19 @@ func (app *App) ANY(url string, handler ...Handler) *App {
 	return app
 }
 
+// Name为路由命名
+//
+// 参数说明：
+//   - name: 路由名称
+//
+// 工作原理：
+//   - 如果是ANY路由，Methods包含所有HTTP方法
+//   - 否则Methods只包含当前路由的方法
+//   - Patten为当前路由的URL
+//
+// 使用场景：
+//   - 为路由命名
+//   - 生成路由URL
 func (app *App) Name(name string) {
 	if app.routeANY {
 		app.Routers[name] = Router{
@@ -635,7 +1010,31 @@ func (app *App) Name(name string) {
 	}
 }
 
-// Group add middlewares and prefix for App.
+// Group为App添加中间件和前缀
+//
+// 参数说明：
+//   - prefix: URL前缀
+//   - middleware: 中间件列表
+//
+// 返回值：
+//   - *RouterGroup: 新的路由分组
+//
+// 工作原理：
+//   - 创建新的RouterGroup
+//   - 继承App的所有中间件
+//   - 添加新的中间件
+//   - 设置前缀
+//
+// 使用场景：
+//   - 路由分组
+//   - 嵌套路由
+//   - 共享中间件
+//
+// 使用示例：
+//
+//	api := app.Group("/api", authMiddleware)
+//	api.GET("/users", handler)
+//	// 注册为 /api/users
 func (app *App) Group(prefix string, middleware ...Handler) *RouterGroup {
 	return &RouterGroup{
 		app:         app,
@@ -644,22 +1043,40 @@ func (app *App) Group(prefix string, middleware ...Handler) *RouterGroup {
 	}
 }
 
-// RouterGroup is a group of routes.
+// RouterGroup是路由分组结构体
+//
+// 字段说明：
+//   - app: 所属的App实例
+//   - Middlewares: 中间件列表
+//   - Prefix: URL前缀
+//
+// 使用场景：
+//   - 路由分组
+//   - 嵌套路由
+//   - 共享中间件
 type RouterGroup struct {
 	app         *App
 	Middlewares Handlers
 	Prefix      string
 }
 
-// AppendReqAndResp stores the request info and handle into app.
-// support the route parameter. The route parameter will be recognized as
-// wildcard store into the RegUrl of Path struct. For example:
+// AppendReqAndResp存储请求信息和处理器到app
+// 支持路由参数。路由参数将被识别为通配符并存储到Path结构的RegUrl中。例如：
 //
 //	/user/:id      => /user/(.*)
 //	/user/:id/info => /user/(.*?)/info
 //
-// The RegUrl will be used to recognize the incoming path and find
-// the handler.
+// # RegUrl将用于识别传入的路径并查找处理器
+//
+// 参数说明：
+//   - url: 路由路径
+//   - method: HTTP方法
+//   - handler: 处理器链
+//
+// 工作原理：
+//   - 将URL和Method添加到app.Requests
+//   - 复制RouterGroup的中间件
+//   - 将中间件和处理器合并后存储到app.Handlers
 func (g *RouterGroup) AppendReqAndResp(url, method string, handler []Handler) {
 
 	g.app.Requests = append(g.app.Requests, Path{
@@ -677,50 +1094,131 @@ func (g *RouterGroup) AppendReqAndResp(url, method string, handler []Handler) {
 	}] = append(h, handler...)
 }
 
-// POST is a shortcut for app.AppendReqAndResp(url, "post", handler).
+// POST是g.AppendReqAndResp(url, "post", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用示例：
+//
+//	group.POST("/users", handler)
 func (g *RouterGroup) POST(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = false
 	g.AppendReqAndResp(url, "post", handler)
 	return g
 }
 
-// GET is a shortcut for app.AppendReqAndResp(url, "get", handler).
+// GET是g.AppendReqAndResp(url, "get", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用示例：
+//
+//	group.GET("/users", handler)
 func (g *RouterGroup) GET(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = false
 	g.AppendReqAndResp(url, "get", handler)
 	return g
 }
 
-// DELETE is a shortcut for app.AppendReqAndResp(url, "delete", handler).
+// DELETE是g.AppendReqAndResp(url, "delete", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用示例：
+//
+//	group.DELETE("/users/:id", handler)
 func (g *RouterGroup) DELETE(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = false
 	g.AppendReqAndResp(url, "delete", handler)
 	return g
 }
 
-// PUT is a shortcut for app.AppendReqAndResp(url, "put", handler).
+// PUT是g.AppendReqAndResp(url, "put", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用示例：
+//
+//	group.PUT("/users/:id", handler)
 func (g *RouterGroup) PUT(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = false
 	g.AppendReqAndResp(url, "put", handler)
 	return g
 }
 
-// OPTIONS is a shortcut for app.AppendReqAndResp(url, "options", handler).
+// OPTIONS是g.AppendReqAndResp(url, "options", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用示例：
+//
+//	group.OPTIONS("/users", handler)
 func (g *RouterGroup) OPTIONS(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = false
 	g.AppendReqAndResp(url, "options", handler)
 	return g
 }
 
-// HEAD is a shortcut for app.AppendReqAndResp(url, "head", handler).
+// HEAD是g.AppendReqAndResp(url, "head", handler)的快捷方法
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用示例：
+//
+//	group.HEAD("/users", handler)
 func (g *RouterGroup) HEAD(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = false
 	g.AppendReqAndResp(url, "head", handler)
 	return g
 }
 
-// ANY registers a route that matches all the HTTP methods.
-// GET, POST, PUT, HEAD, OPTIONS, DELETE.
+// ANY注册一个匹配所有HTTP方法的路由
+// 包括：GET、POST、PUT、HEAD、OPTIONS、DELETE
+//
+// 参数说明：
+//   - url: 路由路径
+//   - handler: 处理器链
+//
+// 返回值：
+//   - *RouterGroup: 返回RouterGroup本身，支持链式调用
+//
+// 使用场景：
+//   - 需要处理所有HTTP方法的路由
+//   - 简化路由注册
+//
+// 使用示例：
+//
+//	group.ANY("/api", handler)
 func (g *RouterGroup) ANY(url string, handler ...Handler) *RouterGroup {
 	g.app.routeANY = true
 	g.AppendReqAndResp(url, "post", handler)
@@ -732,11 +1230,48 @@ func (g *RouterGroup) ANY(url string, handler ...Handler) *RouterGroup {
 	return g
 }
 
+// Name为路由命名
+//
+// 参数说明：
+//   - name: 路由名称
+//
+// 工作原理：
+//   - 调用app.Name方法
+//   - 将路由名称与当前路由关联
+//
+// 使用场景：
+//   - 为路由命名
+//   - 生成路由URL
 func (g *RouterGroup) Name(name string) {
 	g.app.Name(name)
 }
 
-// Group add middlewares and prefix for RouterGroup.
+// Group为RouterGroup添加中间件和前缀
+//
+// 参数说明：
+//   - prefix: URL前缀
+//   - middleware: 中间件列表
+//
+// 返回值：
+//   - *RouterGroup: 新的RouterGroup
+//
+// 工作原理：
+//   - 创建新的RouterGroup
+//   - 继承当前RouterGroup的所有中间件
+//   - 添加新的中间件
+//   - 连接当前前缀和新前缀
+//
+// 使用场景：
+//   - 嵌套路由分组
+//   - 共享中间件
+//   - 多级路由组织
+//
+// 使用示例：
+//
+//	v1 := api.Group("/v1", middleware1)
+//	v2 := v1.Group("/v2", middleware2)
+//	v2.GET("/users", handler)
+//	// 注册为 /api/v1/v2/users
 func (g *RouterGroup) Group(prefix string, middleware ...Handler) *RouterGroup {
 	return &RouterGroup{
 		app:         g.app,
@@ -745,13 +1280,27 @@ func (g *RouterGroup) Group(prefix string, middleware ...Handler) *RouterGroup {
 	}
 }
 
-// slash fix the path which has wrong format problem.
+// slash修复格式错误的路径
+//
+// 参数说明：
+//   - prefix: 路径前缀
+//
+// 返回值：
+//   - string: 规范化后的路径
+//
+// 转换规则：
 //
 //	""      => "/"
 //	"abc/"  => "/abc"
 //	"/abc/" => "/abc"
 //	"/abc"  => "/abc"
 //	"/"     => "/"
+//
+// 工作原理：
+//   - 去除首尾空格
+//   - 确保以/开头
+//   - 去除末尾的/
+//   - 特殊处理根路径"/"
 func slash(prefix string) string {
 	prefix = strings.TrimSpace(prefix)
 	if prefix == "" || prefix == "/" {
@@ -769,7 +1318,19 @@ func slash(prefix string) string {
 	return prefix
 }
 
-// join join the path.
+// join连接两个路径
+//
+// 参数说明：
+//   - prefix: 前缀路径
+//   - suffix: 后缀路径
+//
+// 返回值：
+//   - string: 连接后的路径
+//
+// 工作原理：
+//   - 如果prefix是"/"，直接返回suffix
+//   - 如果suffix是"/"，直接返回prefix
+//   - 否则直接拼接两个字符串
 func join(prefix, suffix string) string {
 	if prefix == "/" {
 		return suffix
