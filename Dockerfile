@@ -38,7 +38,7 @@ RUN apt-get update --fix-missing && \
     #go get golang.org/x/tools/cmd/goimports && \
     #go get github.com/rakyll/gotest && \
     #go get -u golang.org/x/lint/golint && \
-    #go install github.com/GoAdminGroup/adm@latest && \
+    #go install github.com/purpose168/GoAdmin-adm@latest && \
     #go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # 设置工作目录为 /home/goadmin

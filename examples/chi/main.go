@@ -142,7 +142,7 @@ func main() {
 
 	// 自定义登录页面（已注释）
 	// 可以通过添加自定义组件来替换默认的登录页面
-	// 示例代码参考：https://github.com/GoAdminGroup/demo.go-admin.cn/blob/master/main.go#L39
+	// 示例代码参考：https://github.com/purpose168/demo.go-admin.cn/blob/master/main.go#L39
 	// 示例：
 	// template.AddComp("login", datamodel.LoginPage)
 

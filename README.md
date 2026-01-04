@@ -49,7 +49,7 @@ GoAdmin 是一个工具包，帮助您为 Golang 应用程序构建数据可视�
 
 ## 翻译
 
-我们需要您的帮助：[https://github.com/GoAdminGroup/docs/issues/1](https://github.com/GoAdminGroup/docs/issues/1)
+我们需要您的帮助：[https://github.com/purpose168/docs/issues/1](https://github.com/purpose168/docs/issues/1)
 
 ## 谁在使用
 
@@ -63,7 +63,7 @@ GoAdmin 是一个工具包，帮助您为 Golang 应用程序构建数据可视�
 # 创建新项目目录并进入该目录
 $ mkdir new_project && cd new_project
 # 安装 adm 命令行工具
-$ go install github.com/GoAdminGroup/adm@latest
+$ go install github.com/purpose168/GoAdmin-adm@latest
 # 初始化 web 项目
 $ adm init web
 ```
@@ -72,9 +72,9 @@ $ adm init web
 
 快速跟进示例：
 
-- [纯 Golang](https://github.com/GoAdminGroup/example)，简单且依赖较少
-- [带前端模板的 Golang](https://github.com/GoAdminGroup/example_with_frontend)，可自行更改模板
-- [带 Vue 的 Golang](https://github.com/GoAdminGroup/example_with_vue)，如果您有 Vue 经验
+- [纯 Golang](https://github.com/purpose168/example)，简单且依赖较少
+- [带前端模板的 Golang](https://github.com/purpose168/example_with_frontend)，可自行更改模板
+- [带 Vue 的 Golang](https://github.com/purpose168/example_with_vue)，如果您有 Vue 经验
 
 查看 [文档](https://book.go-admin.cn) 了解更多详情。
 

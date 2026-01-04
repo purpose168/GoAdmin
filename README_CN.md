@@ -22,7 +22,7 @@
 
 GoAdmin 可以帮助你的golang应用快速实现数据可视化，搭建一个数据管理平台。
 
-[文档](http://doc.go-admin.cn/zh) | [论坛](http://discuss.go-admin.com) | [Demo](https://demo.go-admin.cn) | [上手例子](https://github.com/GoAdminGroup/example/blob/master/README_CN.md) | [GoAdmin+vue 例子](https://github.com/GoAdminGroup/goadmin-vue-example)
+[文档](http://doc.go-admin.cn/zh) | [论坛](http://discuss.go-admin.com) | [Demo](https://demo.go-admin.cn) | [上手例子](https://github.com/purpose168/example/blob/master/README_CN.md) | [GoAdmin+vue 例子](https://github.com/purpose168/goadmin-vue-example)
 
 
 ![](http://file.go-admin.cn/introduction/interface_3.png)
@@ -37,12 +37,12 @@ GoAdmin 可以帮助你的golang应用快速实现数据可视化，搭建一个
 
 ## 例子
 
-- [纯golang](https://github.com/GoAdminGroup/example), 简单很少依赖
-- [golang + 前端模版](https://github.com/GoAdminGroup/example_with_frontend), 你可以自己修改模版
-- [golang + vue](https://github.com/GoAdminGroup/example_with_vue), 如果你会vue的话，不妨试试
+- [纯golang](https://github.com/purpose168/example), 简单很少依赖
+- [golang + 前端模版](https://github.com/purpose168/example_with_frontend), 你可以自己修改模版
+- [golang + vue](https://github.com/purpose168/example_with_vue), 如果你会vue的话，不妨试试
 
 ## 翻译
-我们需要您的帮忙： [https://github.com/GoAdminGroup/docs/issues/1](https://github.com/GoAdminGroup/docs/issues/1)
+我们需要您的帮忙： [https://github.com/purpose168/docs/issues/1](https://github.com/purpose168/docs/issues/1)
 
 ## 谁在使用GoAdmin
 
@@ -51,7 +51,7 @@ GoAdmin 可以帮助你的golang应用快速实现数据可视化，搭建一个
 ## 使用
 
 ```shell
-$ go install github.com/GoAdminGroup/adm@latest
+$ go install github.com/purpose168/GoAdmin-adm@latest
 $ mkdir new_project && cd new_project
 $ adm init web -l cn
 ```

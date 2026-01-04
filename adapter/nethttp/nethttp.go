@@ -17,7 +17,7 @@
 //   - 支持GET、POST、PUT、DELETE等HTTP方法
 //   - 自动处理路径参数并注入到查询参数中
 //
-// 作者: GoAdminGroup
+// 作者: purpose168
 // 创建日期: 2020-01-01
 // 版本: 1.0.0
 package nethttp

@@ -210,7 +210,7 @@ func main() {
 
 	// 自定义登录页面（可选功能）
 	// GoAdmin 允许开发者自定义登录页面的外观和功能
-	// 可以参考官方示例: https://github.com/GoAdminGroup/demo.go-admin.cn/blob/master/main.go#L39
+	// 可以参考官方示例: https://github.com/purpose168/demo.go-admin.cn/blob/master/main.go#L39
 	//
 	// 示例代码:
 	// template.AddComp("login", datamodel.LoginPage)
