@@ -3,10 +3,10 @@ package display
 import (
 	"strings"
 
-	"github.com/GoAdminGroup/html"
 	"github.com/purpose168/GoAdmin/context"
 	"github.com/purpose168/GoAdmin/template/icon"
 	"github.com/purpose168/GoAdmin/template/types"
+	"github.com/tdewolff/minify/v2/html"
 )
 
 type Bool struct {

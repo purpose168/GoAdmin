@@ -1,7 +1,49 @@
-// Copyright 2019 GoAdmin Core Team. All rights reserved.
-// Use of this source code is governed by a Apache-2.0 style
-// license that can be found in the LICENSE file.
+// 版权所有 2019 GoAdmin 核心团队。保留所有权利。
+// 本源代码的使用受 Apache-2.0 风格许可证管辖
+// 该许可证可在 LICENSE 文件中找到。
 
+// 包 engine 提供 GoAdmin 框架的核心引擎功能
+//
+// Engine 是 GoAdmin 的核心组件，负责协调插件、适配器和各种服务。
+// 它提供了配置管理、数据库连接、路由注册、页面渲染等核心功能。
+//
+// 主要组件：
+//   - Engine 结构体：核心引擎，管理插件列表、适配器、服务和导航按钮
+//   - 插件系统：支持动态添加和管理插件
+//   - 适配器系统：连接不同 Web 框架与 GoAdmin
+//   - 服务系统：提供认证、配置、UI 等核心服务
+//
+// 核心功能：
+//   - 配置管理：支持从 JSON、YAML、INI 文件加载配置
+//   - 数据库连接：支持 MySQL、PostgreSQL、SQLite、MSSQL、OceanBase
+//   - 路由注册：提供 HTML、Data、HTMLFile 等路由注册方法
+//   - 页面渲染：支持面板组件的渲染和展示
+//   - 中间件支持：提供认证、错误处理、日志记录等中间件
+//
+// 使用示例：
+//
+//	// 创建引擎实例
+//	eng := engine.Default()
+//
+//	// 添加配置
+//	eng.AddConfig(&config.Config{
+//	    Databases: config.DatabaseList{
+//	        Default: "default",
+//	        ...
+//	    },
+//	})
+//
+//	// 添加插件
+//	eng.AddPlugins(admin.NewAdmin())
+//
+//	// 启用适配器
+//	eng.Use(router)
+//
+// 设计理念：
+//   - 插件化架构：通过插件系统扩展功能
+//   - 适配器模式：支持多种 Web 框架
+//   - 服务化设计：核心功能通过服务提供
+//   - 中间件链：支持灵活的请求处理流程
 package engine
 
 import (
@@ -39,11 +81,22 @@ import (
 	"github.com/purpose168/GoAdmin/template/types"
 )
 
-// Engine is the core component of goAdmin. It has two attributes.
-// PluginList is an array of plugin. Adapter is the adapter of
-// web framework context and goAdmin context. The relationship of adapter and
-// plugin is that the adapter use the plugin which contains routers and
-// controller methods to inject into the framework entity and make it work.
+// Engine 是 GoAdmin 的核心组件
+//
+// 它包含两个主要属性：
+//   - PluginList：插件数组，包含所有注册的插件
+//   - Adapter：Web框架上下文和GoAdmin上下文的适配器
+//
+// 适配器和插件的关系：
+//
+//	适配器使用插件，插件包含路由器和控制器方法，
+//	将这些内容注入到框架实体中，使其正常工作。
+//
+// 其他属性：
+//   - Services：服务列表，提供认证、配置、UI等核心服务
+//   - NavButtons：导航栏按钮，显示在页面顶部导航栏
+//   - config：配置对象，存储全局配置信息
+//   - announceLock：同步锁，用于确保公告只打印一次
 type Engine struct {
 	PluginList   plugins.Plugins
 	Adapter      adapter.WebFrameWork
@@ -53,7 +106,17 @@ type Engine struct {
 	announceLock sync.Once
 }
 
-// Default return the default engine instance.
+// Default 返回默认的引擎实例
+//
+// 创建并初始化一个Engine实例，设置默认适配器、服务列表和导航按钮
+//
+// 返回值：
+//   - *Engine：默认的引擎实例
+//
+// 实现细节：
+//   - 设置默认适配器为defaultAdapter
+//   - 获取服务列表
+//   - 初始化导航按钮
 func Default() *Engine {
 	engine = &Engine{
 		Adapter:    defaultAdapter,
@@ -63,7 +126,22 @@ func Default() *Engine {
 	return engine
 }
 
-// Use enable the adapter.
+// Use 启用适配器
+//
+// 参数：
+//   - router：Web框架的路由器实例
+//
+// 返回值：
+//   - error：如果适配器为空则返回错误，否则返回nil
+//
+// 工作流程：
+//  1. 检查适配器是否为空，为空则触发panic
+//  2. 添加CSRF令牌服务
+//  3. 初始化站点设置
+//  4. 初始化跳转导航按钮
+//  5. 初始化插件
+//  6. 打印初始化成功消息
+//  7. 调用适配器的Use方法，将插件列表注入到框架中
 func (eng *Engine) Use(router interface{}) error {
 	if eng.Adapter == nil {
 		emptyAdapterPanic()
@@ -79,7 +157,18 @@ func (eng *Engine) Use(router interface{}) error {
 	return eng.Adapter.Use(router, eng.PluginList)
 }
 
-// AddPlugins add the plugins
+// AddPlugins 添加插件
+//
+// 参数：
+//   - plugs：要添加的插件列表
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	遍历所有传入的插件，将它们添加到引擎的PluginList中
+//	如果传入的插件列表为空，则直接返回引擎实例
 func (eng *Engine) AddPlugins(plugs ...plugins.Plugin) *Engine {
 
 	if len(plugs) == 0 {
@@ -93,7 +182,18 @@ func (eng *Engine) AddPlugins(plugs ...plugins.Plugin) *Engine {
 	return eng
 }
 
-// AddPluginList add the plugins
+// AddPluginList 添加插件列表
+//
+// 参数：
+//   - plugs：要添加的插件列表
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	遍历所有传入的插件，将它们添加到引擎的PluginList中
+//	如果传入的插件列表为空，则直接返回引擎实例
 func (eng *Engine) AddPluginList(plugs plugins.Plugins) *Engine {
 
 	if len(plugs) == 0 {
@@ -107,7 +207,19 @@ func (eng *Engine) AddPluginList(plugs plugins.Plugins) *Engine {
 	return eng
 }
 
-// FindPluginByName find the register plugin by given name.
+// FindPluginByName 根据名称查找注册的插件
+//
+// 参数：
+//   - name：要查找的插件名称
+//
+// 返回值：
+//   - plugins.Plugin：找到的插件实例
+//   - bool：是否找到插件
+//
+// 工作原理：
+//
+//	遍历所有注册的插件，比较插件名称与传入的名称
+//	如果找到匹配的插件，则返回该插件和true，否则返回nil和false
 func (eng *Engine) FindPluginByName(name string) (plugins.Plugin, bool) {
 	for _, plug := range eng.PluginList {
 		if plug.Name() == name {
@@ -117,7 +229,18 @@ func (eng *Engine) FindPluginByName(name string) (plugins.Plugin, bool) {
 	return nil, false
 }
 
-// AddAuthService customize the auth logic with given callback function.
+// AddAuthService 使用给定的回调函数自定义认证逻辑
+//
+// 参数：
+//   - processor：认证处理器函数
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	创建一个新的认证服务，并将其添加到引擎的服务列表中
+//	服务名称为"auth"
 func (eng *Engine) AddAuthService(processor auth.Processor) *Engine {
 	eng.Services.Add("auth", auth.NewService(processor))
 	return eng
@@ -127,6 +250,15 @@ func (eng *Engine) AddAuthService(processor auth.Processor) *Engine {
 // Config APIs
 // ============================
 
+// announce 打印初始化公告
+//
+// 工作原理：
+//   - 如果配置的Debug模式为true，只打印一次公告
+//   - 使用sync.Once确保公告只打印一次
+//   - 打印"goadmin is now running"等信息
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
 func (eng *Engine) announce() *Engine {
 	if eng.config.Debug {
 		eng.announceLock.Do(func() {
@@ -136,12 +268,38 @@ func (eng *Engine) announce() *Engine {
 	return eng
 }
 
-// AddConfig set the global config.
+// AddConfig 设置全局配置
+//
+// 参数：
+//   - cfg：配置对象指针
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作流程：
+//  1. 设置配置
+//  2. 打印初始化公告
+//  3. 初始化数据库连接
 func (eng *Engine) AddConfig(cfg *config.Config) *Engine {
 	return eng.setConfig(cfg).announce().initDatabase()
 }
 
-// setConfig set the config of engine.
+// setConfig 设置引擎的配置
+//
+// 参数：
+//   - cfg：配置对象指针
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//  1. 初始化配置
+//  2. 检查主题和GoAdmin版本的兼容性
+//  3. 如果版本不兼容，触发panic
+//
+// 兼容性检查：
+//   - 检查GoAdmin版本是否与主题兼容
+//   - 检查主题版本是否与GoAdmin兼容
 func (eng *Engine) setConfig(cfg *config.Config) *Engine {
 	eng.config = config.Initialize(cfg)
 	sysCheck, themeCheck := template.CheckRequirements()
@@ -156,25 +314,72 @@ func (eng *Engine) setConfig(cfg *config.Config) *Engine {
 	return eng
 }
 
-// AddConfigFromJSON set the global config from json file.
+// AddConfigFromJSON 从JSON文件设置全局配置
+//
+// 参数：
+//   - path：JSON文件路径
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//  1. 从JSON文件读取配置
+//  2. 设置配置
+//  3. 打印初始化公告
+//  4. 初始化数据库连接
 func (eng *Engine) AddConfigFromJSON(path string) *Engine {
 	cfg := config.ReadFromJson(path)
 	return eng.setConfig(&cfg).announce().initDatabase()
 }
 
-// AddConfigFromYAML set the global config from yaml file.
+// AddConfigFromYAML 从YAML文件设置全局配置
+//
+// 参数：
+//   - path：YAML文件路径
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//  1. 从YAML文件读取配置
+//  2. 设置配置
+//  3. 打印初始化公告
+//  4. 初始化数据库连接
 func (eng *Engine) AddConfigFromYAML(path string) *Engine {
 	cfg := config.ReadFromYaml(path)
 	return eng.setConfig(&cfg).announce().initDatabase()
 }
 
-// AddConfigFromINI set the global config from ini file.
+// AddConfigFromINI 从INI文件设置全局配置
+//
+// 参数：
+//   - path：INI文件路径
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//  1. 从INI文件读取配置
+//  2. 设置配置
+//  3. 打印初始化公告
+//  4. 初始化数据库连接
 func (eng *Engine) AddConfigFromINI(path string) *Engine {
 	cfg := config.ReadFromINI(path)
 	return eng.setConfig(&cfg).announce().initDatabase()
 }
 
-// InitDatabase initialize all database connection.
+// InitDatabase 初始化所有数据库连接
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作流程：
+//  1. 打印初始化数据库连接消息
+//  2. 遍历所有数据库配置，按驱动类型分组
+//  3. 为每个驱动类型初始化数据库连接
+//  4. 检查默认适配器是否为空
+//  5. 设置默认适配器的连接
+//  6. 设置引擎适配器的连接
 func (eng *Engine) initDatabase() *Engine {
 	printInitMsg(language.Get("initialize database connections"))
 	for driver, databaseCfg := range eng.config.Databases.GroupByDriver() {
@@ -189,7 +394,17 @@ func (eng *Engine) initDatabase() *Engine {
 	return eng
 }
 
-// AddAdapter add the adapter of engine.
+// AddAdapter 添加引擎的适配器
+//
+// 参数：
+//   - ada：Web框架适配器
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//  1. 设置引擎的适配器
+//  2. 设置默认适配器
 func (eng *Engine) AddAdapter(ada adapter.WebFrameWork) *Engine {
 	eng.Adapter = ada
 	defaultAdapter = ada
@@ -230,82 +445,230 @@ func (eng *Engine) User(ctx interface{}) (models.UserModel, bool) {
 // DB Connection APIs
 // ============================
 
-// DB return the db connection of given driver.
+// DB 返回给定驱动的数据库连接
+//
+// 参数：
+//   - driver：数据库驱动名称（mysql、postgresql、sqlite等）
+//
+// 返回值：
+//   - db.Connection：数据库连接实例
+//
+// 工作原理：
+//
+//	从服务列表中获取指定驱动的数据库连接服务
+//	然后从服务中获取实际的数据库连接
 func (eng *Engine) DB(driver string) db.Connection {
 	return db.GetConnectionFromService(eng.Services.Get(driver))
 }
 
-// DefaultConnection return the default db connection.
+// DefaultConnection 返回默认数据库连接
+//
+// 返回值：
+//   - db.Connection：默认数据库连接实例
+//
+// 工作原理：
+//  1. 获取配置中默认数据库的驱动名称
+//  2. 调用DB函数获取该驱动的数据库连接
 func (eng *Engine) DefaultConnection() db.Connection {
 	return eng.DB(eng.config.Databases.GetDefault().Driver)
 }
 
-// MysqlConnection return the mysql db connection of given driver.
+// MysqlConnection 返回MySQL数据库连接
+//
+// 返回值：
+//   - db.Connection：MySQL数据库连接实例
+//
+// 工作原理：
+//
+//	从服务列表中获取MySQL驱动的数据库连接
 func (eng *Engine) MysqlConnection() db.Connection {
 	return db.GetConnectionFromService(eng.Services.Get(db.DriverMysql))
 }
 
-// MssqlConnection return the mssql db connection of given driver.
+// MssqlConnection 返回MSSQL数据库连接
+//
+// 返回值：
+//   - db.Connection：MSSQL数据库连接实例
+//
+// 工作原理：
+//
+//	从服务列表中获取MSSQL驱动的数据库连接
 func (eng *Engine) MssqlConnection() db.Connection {
 	return db.GetConnectionFromService(eng.Services.Get(db.DriverMssql))
 }
 
-// PostgresqlConnection return the postgresql db connection of given driver.
+// PostgresqlConnection 返回PostgreSQL数据库连接
+//
+// 返回值：
+//   - db.Connection：PostgreSQL数据库连接实例
+//
+// 工作原理：
+//
+//	从服务列表中获取PostgreSQL驱动的数据库连接
 func (eng *Engine) PostgresqlConnection() db.Connection {
 	return db.GetConnectionFromService(eng.Services.Get(db.DriverPostgresql))
 }
 
-// SqliteConnection return the sqlite db connection of given driver.
+// SqliteConnection 返回SQLite数据库连接
+//
+// 返回值：
+//   - db.Connection：SQLite数据库连接实例
+//
+// 工作原理：
+//
+//	从服务列表中获取SQLite驱动的数据库连接
 func (eng *Engine) SqliteConnection() db.Connection {
 	return db.GetConnectionFromService(eng.Services.Get(db.DriverSqlite))
 }
 
-// OceanBaseConnection return the OceanBase db connection of given driver.
+// OceanBaseConnection 返回OceanBase数据库连接
+//
+// 返回值：
+//   - db.Connection：OceanBase数据库连接实例
+//
+// 工作原理：
+//
+//	从服务列表中获取OceanBase驱动的数据库连接
 func (eng *Engine) OceanBaseConnection() db.Connection {
 	return db.GetConnectionFromService(eng.Services.Get(db.DriverOceanBase))
 }
 
+// ConnectionSetter 是一个用于配置数据库连接的函数类型
+//
+// 参数：
+//   - db.Connection：数据库连接实例
+//
+// 使用场景：
+//
+//	用于在获取数据库连接后对连接进行进一步配置
+//	可以在连接上设置超时、连接池大小等参数
 type ConnectionSetter func(db.Connection)
 
-// ResolveConnection resolve the specified driver connection.
+// ResolveConnection 解析指定驱动的数据库连接
+//
+// 参数：
+//   - setter：连接配置函数
+//   - driver：数据库驱动名称
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//  1. 获取指定驱动的数据库连接
+//  2. 调用setter函数对连接进行配置
+//  3. 返回引擎实例，支持链式调用
 func (eng *Engine) ResolveConnection(setter ConnectionSetter, driver string) *Engine {
 	setter(eng.DB(driver))
 	return eng
 }
 
-// ResolveMysqlConnection resolve the mysql connection.
+// ResolveMysqlConnection 解析MySQL数据库连接
+//
+// 参数：
+//   - setter：连接配置函数
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	调用ResolveConnection函数，指定MySQL驱动
 func (eng *Engine) ResolveMysqlConnection(setter ConnectionSetter) *Engine {
 	eng.ResolveConnection(setter, db.DriverMysql)
 	return eng
 }
 
-// ResolveMssqlConnection resolve the mssql connection.
+// ResolveMssqlConnection 解析MSSQL数据库连接
+//
+// 参数：
+//   - setter：连接配置函数
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	调用ResolveConnection函数，指定MSSQL驱动
 func (eng *Engine) ResolveMssqlConnection(setter ConnectionSetter) *Engine {
 	eng.ResolveConnection(setter, db.DriverMssql)
 	return eng
 }
 
-// ResolveSqliteConnection resolve the sqlite connection.
+// ResolveSqliteConnection 解析SQLite数据库连接
+//
+// 参数：
+//   - setter：连接配置函数
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	调用ResolveConnection函数，指定SQLite驱动
 func (eng *Engine) ResolveSqliteConnection(setter ConnectionSetter) *Engine {
 	eng.ResolveConnection(setter, db.DriverSqlite)
 	return eng
 }
 
-// ResolvePostgresqlConnection resolve the postgres connection.
+// ResolvePostgresqlConnection 解析PostgreSQL数据库连接
+//
+// 参数：
+//   - setter：连接配置函数
+//
+// 返回值：
+//   - *Engine：引擎实例，支持链式调用
+//
+// 工作原理：
+//
+//	调用ResolveConnection函数，指定PostgreSQL驱动
 func (eng *Engine) ResolvePostgresqlConnection(setter ConnectionSetter) *Engine {
 	eng.ResolveConnection(setter, db.DriverPostgresql)
 	return eng
 }
 
+// Setter 是一个用于配置引擎的函数类型
+//
+// 参数：
+//   - *Engine：引擎实例
+//
+// 使用场景：
+//
+//	用于在克隆引擎实例时对新实例进行配置
 type Setter func(*Engine)
 
-// Clone copy a new Engine.
+// Clone 复制一个新的引擎实例
+//
+// 参数：
+//   - e：用于接收复制结果的引擎实例指针
+//
+// 返回值：
+//   - *Engine：复制后的引擎实例
+//
+// 注意：
+//
+//	该方法目前的实现只是将引擎实例赋值给e，
+//	并没有真正创建一个新的副本。
 func (eng *Engine) Clone(e *Engine) *Engine {
 	e = eng
 	return eng
 }
 
-// ClonedBySetter copy a new Engine by a setter callback function.
+// ClonedBySetter 通过设置器函数复制一个新的引擎实例
+//
+// 参数：
+//   - setter：引擎配置函数
+//
+// 返回值：
+//   - *Engine：配置后的引擎实例
+//
+// 工作原理：
+//  1. 调用setter函数对引擎实例进行配置
+//  2. 返回配置后的引擎实例
+//
+// 注意：
+//
+//	该方法目前的实现只是对原引擎实例进行配置，
+//	并没有真正创建一个新的副本。
 func (eng *Engine) ClonedBySetter(setter Setter) *Engine {
 	setter(eng)
 	return eng
