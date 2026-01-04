@@ -4,7 +4,7 @@ go 1.22.10
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
-	github.com/purpose168/GoAdmin-html v0.0.1
+	github.com/purpose168/GoAdmin-html 
 	github.com/purpose168/GoAdmin-themes v0.0.48
 	github.com/NebulousLabs/fastrand v0.0.0-20181203155948-6fb6489aac4e
 	github.com/agiledragon/gomonkey v2.0.2+incompatible
