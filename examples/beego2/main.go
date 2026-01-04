@@ -9,8 +9,8 @@ import (
 	_ "github.com/purpose168/GoAdmin/adapter/beego2"
 	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"
 
-	"github.com/GoAdminGroup/themes/adminlte"
 	"github.com/beego/beego/v2/server/web"
+	"github.com/purpose168/GoAdmin-themes/adminlte"
 	"github.com/purpose168/GoAdmin/engine"
 	"github.com/purpose168/GoAdmin/examples/datamodel"
 	"github.com/purpose168/GoAdmin/modules/config"

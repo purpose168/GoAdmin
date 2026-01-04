@@ -15,8 +15,8 @@ import (
 	// add mssql driver
 	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mssql"
 
-	"github.com/GoAdminGroup/themes/adminlte"
 	"github.com/beego/beego/v2/server/web"
+	"github.com/purpose168/GoAdmin-themes/adminlte"
 	"github.com/purpose168/GoAdmin/engine"
 	"github.com/purpose168/GoAdmin/modules/config"
 	"github.com/purpose168/GoAdmin/modules/language"

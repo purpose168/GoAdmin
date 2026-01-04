@@ -24,7 +24,7 @@ steps:
     GO111MODULE: on
     GOPROXY: https://goproxy.cn
   commands:
-  - cd /go/src/github.com/GoAdminGroup/go-admin
+  - cd /go/src/github.com/purpose168/GoAdmin
   - git pull
   - git fetch origin pull/$DRONE_PULL_REQUEST/head:pr$DRONE_PULL_REQUEST
   - git checkout pr$DRONE_PULL_REQUEST
@@ -68,7 +68,7 @@ steps:
 #     GO111MODULE: on
 #     GOPROXY: https://goproxy.cn
 #   commands:
-#   - cd /go/src/github.com/GoAdminGroup/go-admin
+#   - cd /go/src/github.com/purpose168/GoAdmin
 #   - git pull
 #   - git fetch origin pull/$DRONE_PULL_REQUEST/head:pr$DRONE_PULL_REQUEST
 #   - git checkout pr$DRONE_PULL_REQUEST
@@ -103,7 +103,7 @@ steps:
     GO111MODULE: on
     GOPROXY: https://goproxy.cn
   commands:
-  - cd /go/src/github.com/GoAdminGroup/go-admin
+  - cd /go/src/github.com/purpose168/GoAdmin
   - git pull
   - git fetch origin pull/$DRONE_PULL_REQUEST/head:pr$DRONE_PULL_REQUEST
   - git checkout pr$DRONE_PULL_REQUEST
@@ -130,7 +130,7 @@ steps:
     GO111MODULE: on
     GOPROXY: https://goproxy.cn
   commands:
-  - cd /go/src/github.com/GoAdminGroup/go-admin
+  - cd /go/src/github.com/purpose168/GoAdmin
   - git pull
   - git fetch origin pull/$DRONE_PULL_REQUEST/head:pr$DRONE_PULL_REQUEST
   - git checkout pr$DRONE_PULL_REQUEST
@@ -164,7 +164,7 @@ steps:
     GO111MODULE: on
     GOPROXY: https://goproxy.cn
   commands:
-  - cd /go/src/github.com/GoAdminGroup/go-admin
+  - cd /go/src/github.com/purpose168/GoAdmin
   - git pull
   - git fetch origin pull/$DRONE_PULL_REQUEST/head:pr$DRONE_PULL_REQUEST
   - git checkout pr$DRONE_PULL_REQUEST

@@ -13,8 +13,8 @@ import (
 	"github.com/purpose168/GoAdmin/examples/datamodel"
 	"github.com/purpose168/GoAdmin/modules/config"
 
-	"github.com/GoAdminGroup/themes/adminlte"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/purpose168/GoAdmin-themes/adminlte"
 	"github.com/purpose168/GoAdmin/modules/language"
 	"github.com/purpose168/GoAdmin/plugins/example"
 	"github.com/purpose168/GoAdmin/template"

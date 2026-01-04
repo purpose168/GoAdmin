@@ -1,4 +1,4 @@
-module github.com/GoAdminGroup/go-admin
+module github.com/purpose168/GoAdmin
 
 go 1.22.10
 

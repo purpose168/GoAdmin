@@ -12,8 +12,8 @@ import (
 	_ "github.com/purpose168/GoAdmin/adapter/chi"
 	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"
 
-	"github.com/GoAdminGroup/themes/adminlte"
 	"github.com/go-chi/chi"
+	"github.com/purpose168/GoAdmin-themes/adminlte"
 	"github.com/purpose168/GoAdmin/engine"
 	"github.com/purpose168/GoAdmin/examples/datamodel"
 	"github.com/purpose168/GoAdmin/modules/config"

@@ -3,7 +3,7 @@ package paginator
 import (
 	"testing"
 
-	_ "github.com/GoAdminGroup/themes/sword"
+	_ "github.com/purpose168/GoAdmin-themes/sword"
 	"github.com/purpose168/GoAdmin/modules/config"
 	"github.com/purpose168/GoAdmin/plugins/admin/modules/parameter"
 )

@@ -15,7 +15,7 @@ import (
 	// add mssql driver
 	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mssql"
 	// add adminlte ui theme
-	"github.com/GoAdminGroup/themes/adminlte"
+	"github.com/purpose168/GoAdmin-themes/adminlte"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/purpose168/GoAdmin/engine"

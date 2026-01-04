@@ -439,6 +439,19 @@ func (eng *Engine) initPlugins() {
 	plugins.Add(adm)
 }
 
+// initNavJumpButtonParams初始化导航栏跳转按钮参数
+//
+// 返回值：
+//   - []navJumpButtonParam: 导航栏按钮参数列表
+//
+// 工作原理：
+//   - 返回所有默认导航栏按钮的参数
+//   - 根据配置决定是否显示各个按钮
+//   - 包含：站点设置、代码生成工具、站点信息、插件管理
+//
+// 使用场景：
+//   - 内部方法，由initJumpNavButtons调用
+//   - 定义默认导航栏按钮
 func (eng *Engine) initNavJumpButtonParams() []navJumpButtonParam {
 	return []navJumpButtonParam{
 		{
@@ -473,6 +486,18 @@ func (eng *Engine) initNavJumpButtonParams() []navJumpButtonParam {
 	}
 }
 
+// initSiteSetting初始化站点设置
+//
+// 工作原理：
+//   - 从数据库加载站点配置
+//   - 使用配置初始化Site模型
+//   - 将配置更新到数据库
+//   - 将配置服务添加到服务列表
+//   - 初始化错误处理
+//
+// 使用场景：
+//   - 内部方法，由Use调用
+//   - 初始化站点配置
 func (eng *Engine) initSiteSetting() {
 
 	printInitMsg(language.Get("initialize configuration"))
@@ -493,8 +518,27 @@ func (eng *Engine) initSiteSetting() {
 // HTML Content Render APIs
 // ============================
 
-// Content call the Content method of engine adapter.
-// If adapter is nil, it will panic.
+// Content调用Engine适配器的Content方法
+//
+// 参数说明：
+//   - ctx: Web框架上下文
+//   - panel: 面板生成函数
+//
+// 工作原理：
+//   - 检查适配器是否为空，为空则panic
+//   - 调用适配器的Content方法
+//   - 传递admin插件的AddOperationFn
+//   - 传递导航栏按钮
+//
+// 使用场景：
+//   - 渲染GoAdmin页面
+//   - 显示管理面板
+//
+// 使用示例：
+//
+//	eng.Content(c, func(ctx *context.Context) types.Panel {
+//	    return components.GetTable()
+//	})
 func (eng *Engine) Content(ctx interface{}, panel types.GetPanelFn) {
 	if eng.Adapter == nil {
 		emptyAdapterPanic()
@@ -502,8 +546,27 @@ func (eng *Engine) Content(ctx interface{}, panel types.GetPanelFn) {
 	eng.Adapter.Content(ctx, panel, eng.AdminPlugin().GetAddOperationFn(), *eng.NavButtons...)
 }
 
-// Content call the Content method of defaultAdapter.
-// If defaultAdapter is nil, it will panic.
+// Content调用defaultAdapter的Content方法
+//
+// 参数说明：
+//   - ctx: Web框架上下文
+//   - panel: 面板生成函数
+//
+// 工作原理：
+//   - 检查默认适配器是否为空，为空则panic
+//   - 调用默认适配器的Content方法
+//   - 传递admin插件的AddOperationFn
+//   - 传递全局导航栏按钮
+//
+// 使用场景：
+//   - 渲染GoAdmin页面
+//   - 显示管理面板
+//
+// 使用示例：
+//
+//	Content(c, func(ctx *context.Context) types.Panel {
+//	    return components.GetTable()
+//	})
 func Content(ctx interface{}, panel types.GetPanelFn) {
 	if defaultAdapter == nil {
 		emptyAdapterPanic()
@@ -511,7 +574,29 @@ func Content(ctx interface{}, panel types.GetPanelFn) {
 	defaultAdapter.Content(ctx, panel, engine.AdminPlugin().GetAddOperationFn(), *navButtons...)
 }
 
-// Data inject the route and corresponding handler to the web framework.
+// Data将路由和对应的处理器注入到Web框架
+//
+// 参数说明：
+//   - method: HTTP方法（GET、POST等）
+//   - url: 路由路径
+//   - handler: 处理器函数
+//   - noAuth: 是否需要认证，默认需要认证
+//
+// 工作原理：
+//   - 如果noAuth为true，使用wrap包装处理器（不需要认证）
+//   - 否则使用wrapWithAuthMiddleware包装处理器（需要认证）
+//   - 将处理器添加到适配器
+//
+// 使用场景：
+//   - 注册API路由
+//   - 注册自定义处理器
+//
+// 使用示例：
+//
+//	eng.Data("GET", "/api/data", func(ctx *context.Context) {
+//	    ctx.JSON(200, map[string]interface{}{"data": "ok"})
+//	})
+//	eng.Data("POST", "/api/data", handler, true) // 不需要认证
 func (eng *Engine) Data(method, url string, handler context.Handler, noAuth ...bool) {
 	if len(noAuth) > 0 && noAuth[0] {
 		eng.Adapter.AddHandler(method, url, eng.wrap(handler))
@@ -520,7 +605,32 @@ func (eng *Engine) Data(method, url string, handler context.Handler, noAuth ...b
 	}
 }
 
-// HTML inject the route and corresponding handler wrapped by the given function to the web framework.
+// HTML将路由和对应的处理器注入到Web框架，处理器由给定函数包装
+//
+// 参数说明：
+//   - method: HTTP方法（GET、POST等）
+//   - url: 路由路径
+//   - fn: 面板信息生成函数
+//   - noAuth: 是否需要认证，默认需要认证
+//
+// 工作原理：
+//   - 创建处理器函数
+//   - 调用fn获取面板信息
+//   - 如果出错则显示警告面板
+//   - 执行面板的回调函数
+//   - 获取模板和用户信息
+//   - 渲染页面并返回HTML
+//   - 根据noAuth参数决定是否添加认证中间件
+//
+// 使用场景：
+//   - 注册HTML页面路由
+//   - 渲染管理面板
+//
+// 使用示例：
+//
+//	eng.HTML("GET", "/dashboard", func(ctx *context.Context) (types.Panel, error) {
+//	    return components.GetDashboard(), nil
+//	})
 func (eng *Engine) HTML(method, url string, fn types.GetPanelInfoFn, noAuth ...bool) {
 
 	var handler = func(ctx *context.Context) {
@@ -563,8 +673,33 @@ func (eng *Engine) HTML(method, url string, fn types.GetPanelInfoFn, noAuth ...b
 	}
 }
 
-// HTMLFile inject the route and corresponding handler which returns the panel content of given html file path
-// to the web framework.
+// HTMLFile将路由和对应的处理器注入到Web框架，处理器返回给定HTML文件路径的面板内容
+//
+// 参数说明：
+//   - method: HTTP方法（GET、POST等）
+//   - url: 路由路径
+//   - path: HTML文件路径
+//   - data: 模板数据
+//   - noAuth: 是否需要认证，默认需要认证
+//
+// 工作原理：
+//   - 创建处理器函数
+//   - 解析HTML文件模板
+//   - 执行模板并将结果写入缓冲区
+//   - 如果出错则显示错误面板
+//   - 获取模板和用户信息
+//   - 渲染页面并返回HTML
+//   - 根据noAuth参数决定是否添加认证中间件
+//
+// 使用场景：
+//   - 注册HTML文件路由
+//   - 渲染自定义HTML页面
+//
+// 使用示例：
+//
+//	eng.HTMLFile("GET", "/custom", "views/custom.html", map[string]interface{}{
+//	    "title": "自定义页面",
+//	})
 func (eng *Engine) HTMLFile(method, url, path string, data map[string]interface{}, noAuth ...bool) {
 
 	var handler = func(ctx *context.Context) {
@@ -614,20 +749,77 @@ func (eng *Engine) HTMLFile(method, url, path string, data map[string]interface{
 	}
 }
 
-// HTMLFiles inject the route and corresponding handler which returns the panel content of given html files path
-// to the web framework.
+// HTMLFiles将路由和对应的处理器注入到Web框架，处理器返回给定HTML文件路径的面板内容
+//
+// 参数说明：
+//   - method: HTTP方法（GET、POST等）
+//   - url: 路由路径
+//   - data: 模板数据
+//   - files: HTML文件路径列表
+//
+// 工作原理：
+//   - 使用htmlFilesHandler创建处理器
+//   - 添加认证中间件
+//   - 将处理器添加到适配器
+//
+// 使用场景：
+//   - 注册多个HTML文件路由
+//   - 渲染自定义HTML页面
+//
+// 使用示例：
+//
+//	eng.HTMLFiles("GET", "/custom", map[string]interface{}{
+//	    "title": "自定义页面",
+//	}, "views/header.html", "views/content.html", "views/footer.html")
 func (eng *Engine) HTMLFiles(method, url string, data map[string]interface{}, files ...string) {
 	eng.Adapter.AddHandler(method, url, eng.wrapWithAuthMiddleware(eng.htmlFilesHandler(data, files...)))
 }
 
-// HTMLFilesNoAuth inject the route and corresponding handler which returns the panel content of given html files path
-// to the web framework without auth check.
+// HTMLFilesNoAuth将路由和对应的处理器注入到Web框架，处理器返回给定HTML文件路径的面板内容，不需要认证
+//
+// 参数说明：
+//   - method: HTTP方法（GET、POST等）
+//   - url: 路由路径
+//   - data: 模板数据
+//   - files: HTML文件路径列表
+//
+// 工作原理：
+//   - 使用htmlFilesHandler创建处理器
+//   - 不添加认证中间件
+//   - 将处理器添加到适配器
+//
+// 使用场景：
+//   - 注册公开访问的HTML文件路由
+//   - 渲染自定义HTML页面
+//
+// 使用示例：
+//
+//	eng.HTMLFilesNoAuth("GET", "/public", map[string]interface{}{
+//	    "title": "公开页面",
+//	}, "views/public.html")
 func (eng *Engine) HTMLFilesNoAuth(method, url string, data map[string]interface{}, files ...string) {
 	eng.Adapter.AddHandler(method, url, eng.wrap(eng.htmlFilesHandler(data, files...)))
 }
 
-// HTMLFiles inject the route and corresponding handler which returns the panel content of given html files path
-// to the web framework.
+// htmlFilesHandler创建处理器，返回给定HTML文件路径的面板内容
+//
+// 参数说明：
+//   - data: 模板数据
+//   - files: HTML文件路径列表
+//
+// 返回值：
+//   - context.Handler: 处理器函数
+//
+// 工作原理：
+//   - 解析HTML文件模板
+//   - 执行模板并将结果写入缓冲区
+//   - 如果出错则显示错误面板
+//   - 获取模板和用户信息
+//   - 渲染页面并返回HTML
+//
+// 使用场景：
+//   - 内部方法，由HTMLFiles和HTMLFilesNoAuth调用
+//   - 创建HTML文件处理器
 func (eng *Engine) htmlFilesHandler(data map[string]interface{}, files ...string) context.Handler {
 	return func(ctx *context.Context) {
 
@@ -670,9 +862,22 @@ func (eng *Engine) htmlFilesHandler(data map[string]interface{}, files ...string
 	}
 }
 
-// errorPanelHTML add an error panel html to context response.
+// errorPanelHTML将错误面板HTML添加到上下文响应
+//
+// 参数说明：
+//   - ctx: 上下文对象
+//   - buf: 缓冲区
+//   - err: 错误对象
+//
+// 工作原理：
+//   - 获取模板和用户信息
+//   - 渲染错误面板
+//   - 返回HTML响应
+//
+// 使用场景：
+//   - 内部方法，用于显示错误页面
+//   - 错误处理
 func (eng *Engine) errorPanelHTML(ctx *context.Context, buf *bytes.Buffer, err error) {
-
 	user := auth.Auth(ctx)
 	tmpl, tmplName := template.Default(ctx).GetTemplate(ctx.IsPjax())
 
@@ -698,7 +903,28 @@ func (eng *Engine) errorPanelHTML(ctx *context.Context, buf *bytes.Buffer, err e
 // Admin Plugin APIs
 // ============================
 
-// AddGenerators add the admin generators.
+// AddGenerators添加admin生成器
+//
+// 参数说明：
+//   - list: 生成器列表
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 查找admin插件
+//   - 如果存在则添加生成器
+//   - 如果不存在则创建新的admin插件并添加生成器
+//
+// 使用场景：
+//   - 添加表格模型生成器
+//   - 扩展admin功能
+//
+// 使用示例：
+//
+//	eng.AddGenerators(table.GeneratorList{
+//	    table.GetGeneratorsForModel(&User{}),
+//	})
 func (eng *Engine) AddGenerators(list ...table.GeneratorList) *Engine {
 	plug, exist := eng.FindPluginByName("admin")
 	if exist {
@@ -709,7 +935,24 @@ func (eng *Engine) AddGenerators(list ...table.GeneratorList) *Engine {
 	return eng
 }
 
-// AdminPlugin get the admin plugin. if not exist, create one.
+// AdminPlugin获取admin插件，如果不存在则创建一个
+//
+// 返回值：
+//   - *admin.Admin: admin插件实例
+//
+// 工作原理：
+//   - 查找admin插件
+//   - 如果存在则返回
+//   - 如果不存在则创建新的admin插件并添加到插件列表
+//
+// 使用场景：
+//   - 获取admin插件
+//   - 配置admin功能
+//
+// 使用示例：
+//
+//	adm := eng.AdminPlugin()
+//	adm.SetCaptcha(map[string]string{"driver": "recaptcha"})
 func (eng *Engine) AdminPlugin() *admin.Admin {
 	plug, exist := eng.FindPluginByName("admin")
 	if exist {
@@ -720,73 +963,279 @@ func (eng *Engine) AdminPlugin() *admin.Admin {
 	return adm
 }
 
-// SetCaptcha set the captcha config.
+// SetCaptcha设置验证码配置
+//
+// 参数说明：
+//   - captcha: 验证码配置
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 获取admin插件
+//   - 设置验证码配置
+//
+// 使用场景：
+//   - 配置验证码
+//   - 防止机器人攻击
+//
+// 使用示例：
+//
+//	eng.SetCaptcha(map[string]string{
+//	    "driver": "recaptcha",
+//	    "site_key": "xxx",
+//	    "secret_key": "yyy",
+//	})
 func (eng *Engine) SetCaptcha(captcha map[string]string) *Engine {
 	eng.AdminPlugin().SetCaptcha(captcha)
 	return eng
 }
 
-// SetCaptchaDriver set the captcha config with driver.
+// SetCaptchaDriver使用驱动设置验证码配置
+//
+// 参数说明：
+//   - driver: 验证码驱动名称
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 获取admin插件
+//   - 设置验证码驱动
+//
+// 使用场景：
+//   - 配置验证码驱动
+//   - 快速设置验证码
+//
+// 使用示例：
+//
+//	eng.SetCaptchaDriver("recaptcha")
 func (eng *Engine) SetCaptchaDriver(driver string) *Engine {
 	eng.AdminPlugin().SetCaptcha(map[string]string{"driver": driver})
 	return eng
 }
 
-// AddGenerator add table model generator.
+// AddGenerator添加表格模型生成器
+//
+// 参数说明：
+//   - key: 生成器键名
+//   - g: 生成器对象
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 获取admin插件
+//   - 添加生成器到admin插件
+//
+// 使用场景：
+//   - 添加单个表格生成器
+//   - 管理数据表
+//
+// 使用示例：
+//
+//	eng.AddGenerator("user", table.GetGeneratorsForModel(&User{}))
 func (eng *Engine) AddGenerator(key string, g table.Generator) *Engine {
 	eng.AdminPlugin().AddGenerator(key, g)
 	return eng
 }
 
-// AddGlobalDisplayProcessFn call types.AddGlobalDisplayProcessFn.
+// AddGlobalDisplayProcessFn调用types.AddGlobalDisplayProcessFn
+//
+// 参数说明：
+//   - f: 字段过滤函数
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加全局显示处理函数
+//   - 用于处理字段显示
+//
+// 使用场景：
+//   - 自定义字段显示逻辑
+//   - 全局字段处理
+//
+// 使用示例：
+//
+//	eng.AddGlobalDisplayProcessFn(func(value types.FieldModel) interface{} {
+//	    return strings.ToUpper(value.Value)
+//	})
 func (eng *Engine) AddGlobalDisplayProcessFn(f types.FieldFilterFn) *Engine {
 	types.AddGlobalDisplayProcessFn(f)
 	return eng
 }
 
-// AddDisplayFilterLimit call types.AddDisplayFilterLimit.
+// AddDisplayFilterLimit调用types.AddDisplayFilterLimit
+//
+// 参数说明：
+//   - limit: 显示长度限制
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 设置字段显示长度限制
+//   - 超过限制的文本将被截断
+//
+// 使用场景：
+//   - 限制字段显示长度
+//   - 防止长文本破坏布局
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterLimit(50)
 func (eng *Engine) AddDisplayFilterLimit(limit int) *Engine {
 	types.AddLimit(limit)
 	return eng
 }
 
-// AddDisplayFilterTrimSpace call types.AddDisplayFilterTrimSpace.
+// AddDisplayFilterTrimSpace调用types.AddDisplayFilterTrimSpace
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 自动去除字段值的首尾空格
+//
+// 使用场景：
+//   - 去除字段值空格
+//   - 数据清洗
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterTrimSpace()
 func (eng *Engine) AddDisplayFilterTrimSpace() *Engine {
 	types.AddTrimSpace()
 	return eng
 }
 
-// AddDisplayFilterSubstr call types.AddDisplayFilterSubstr.
+// AddDisplayFilterSubstr调用types.AddDisplayFilterSubstr
+//
+// 参数说明：
+//   - start: 起始位置
+//   - end: 结束位置
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 截取字段值的指定范围
+//
+// 使用场景：
+//   - 截取字段值
+//   - 部分显示
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterSubstr(0, 10)
 func (eng *Engine) AddDisplayFilterSubstr(start int, end int) *Engine {
 	types.AddSubstr(start, end)
 	return eng
 }
 
-// AddDisplayFilterToTitle call types.AddDisplayFilterToTitle.
+// AddDisplayFilterToTitle调用types.AddDisplayFilterToTitle
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 将字段值转换为标题格式（首字母大写）
+//
+// 使用场景：
+//   - 标题格式化
+//   - 字段值美化
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterToTitle()
 func (eng *Engine) AddDisplayFilterToTitle() *Engine {
 	types.AddToTitle()
 	return eng
 }
 
-// AddDisplayFilterToUpper call types.AddDisplayFilterToUpper.
+// AddDisplayFilterToUpper调用types.AddDisplayFilterToUpper
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 将字段值转换为大写
+//
+// 使用场景：
+//   - 大写转换
+//   - 字段值格式化
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterToUpper()
 func (eng *Engine) AddDisplayFilterToUpper() *Engine {
 	types.AddToUpper()
 	return eng
 }
 
-// AddDisplayFilterToLower call types.AddDisplayFilterToLower.
+// AddDisplayFilterToLower调用types.AddDisplayFilterToLower
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 将字段值转换为小写
+//
+// 使用场景：
+//   - 小写转换
+//   - 字段值格式化
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterToLower()
 func (eng *Engine) AddDisplayFilterToLower() *Engine {
-	types.AddToUpper()
+	types.AddToLower()
 	return eng
 }
 
-// AddDisplayFilterXssFilter call types.AddDisplayFilterXssFilter.
+// AddDisplayFilterXssFilter调用types.AddDisplayFilterXssFilter
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 过滤XSS攻击代码
+//
+// 使用场景：
+//   - XSS防护
+//   - 安全过滤
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterXssFilter()
 func (eng *Engine) AddDisplayFilterXssFilter() *Engine {
 	types.AddXssFilter()
 	return eng
 }
 
-// AddDisplayFilterXssJsFilter call types.AddDisplayFilterXssJsFilter.
+// AddDisplayFilterXssJsFilter调用types.AddDisplayFilterXssJsFilter
+//
+// 返回值：
+//   - *Engine: 返回Engine本身，支持链式调用
+//
+// 工作原理：
+//   - 添加字段显示过滤函数
+//   - 过滤JavaScript XSS攻击代码
+//
+// 使用场景：
+//   - JavaScript XSS防护
+//   - 安全过滤
+//
+// 使用示例：
+//
+//	eng.AddDisplayFilterXssJsFilter()
 func (eng *Engine) AddDisplayFilterXssJsFilter() *Engine {
 	types.AddXssJsFilter()
 	return eng

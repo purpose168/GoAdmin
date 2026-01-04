@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"time"
 
-	_ "github.com/GoAdminGroup/themes/adminlte"
+	_ "github.com/purpose168/GoAdmin-themes/adminlte"
 	_ "github.com/purpose168/GoAdmin/adapter/fasthttp"
 	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"
 

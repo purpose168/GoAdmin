@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoAdminGroup/html"
 	"github.com/purpose168/GoAdmin/modules/system"
 
 	"github.com/purpose168/GoAdmin/modules/logger"
 
 	"github.com/purpose168/GoAdmin/modules/config"
 
-	"github.com/GoAdminGroup/html"
 	"github.com/gin-gonic/gin"
 	"github.com/purpose168/GoAdmin/context"
 	"github.com/purpose168/GoAdmin/modules/auth"

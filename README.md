@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/GoAdminGroup/go-admin">
+  <a href="https://github.com/purpose168/GoAdmin">
     <img width="48%" alt="go-admin" src="http://quick.go-admin.cn/official/assets/imgs/github_logo.png">
   </a>
 </p>
@@ -19,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="http://drone.go-admin.com/GoAdminGroup/go-admin"><img alt="构建状态" src="http://drone.go-admin.com/api/badges/purpose168/GoAdmin/status.svg?ref=refs/heads/master"></a>
-  <a href="https://goreportcard.com/report/github.com/GoAdminGroup/go-admin"><img alt="Go 报告卡" src="https://goreportcard.com/badge/github.com/GoAdminGroup/go-admin"></a>
-  <a href="https://goreportcard.com/report/github.com/GoAdminGroup/go-admin"><img alt="golang" src="https://img.shields.io/badge/awesome-golang-blue.svg"></a>
+  <a href="http://drone.go-admin.com/purpose168/GoAdmin"><img alt="构建状态" src="http://drone.go-admin.com/api/badges/purpose168/GoAdmin/status.svg?ref=refs/heads/master"></a>
+  <a href="https://goreportcard.com/report/github.com/purpose168/GoAdmin"><img alt="Go 报告卡" src="https://goreportcard.com/badge/github.com/purpose168/GoAdmin"></a>
+  <a href="https://goreportcard.com/report/github.com/purpose168/GoAdmin"><img alt="golang" src="https://img.shields.io/badge/awesome-golang-blue.svg"></a>
   <a href="https://discord.gg/usAaEpCP"><img alt="discord" src="https://img.shields.io/badge/chat%20on-Discord-blue.svg"></a>
   <a href="https://t.me/joinchat/NlyH6Bch2QARZkArithKvg" rel="nofollow"><img alt="telegram" src="https://img.shields.io/badge/chat%20on-telegram-blue" style="max-width:100%;"></a>
   <a href="https://raw.githubusercontent.com/purpose168/GoAdmin/master/LICENSE" rel="nofollow"><img src="https://img.shields.io/badge/license-Apache2.0-blue.svg" alt="许可证" data-canonical-src="https://img.shields.io/badge/license-Apache2.0-blue.svg" style="max-width:100%;"></a>

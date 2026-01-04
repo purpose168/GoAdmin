@@ -2,7 +2,7 @@ package buffalo
 
 import (
 	// add buffalo adapter
-	"github.com/GoAdminGroup/themes/adminlte"
+	"github.com/purpose168/GoAdmin-themes/adminlte"
 	_ "github.com/purpose168/GoAdmin/adapter/buffalo"
 	"github.com/purpose168/GoAdmin/modules/config"
 	"github.com/purpose168/GoAdmin/modules/language"
@@ -17,7 +17,7 @@ import (
 	// add mssql driver
 	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mssql"
 	// add adminlte ui theme
-	_ "github.com/GoAdminGroup/themes/adminlte"
+	_ "github.com/purpose168/GoAdmin-themes/adminlte"
 
 	"github.com/purpose168/GoAdmin/template"
 	"github.com/purpose168/GoAdmin/template/chartjs"

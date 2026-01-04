@@ -3,12 +3,12 @@ package datamodel
 import (
 	"html/template"
 
-	"github.com/GoAdminGroup/themes/adminlte/components/chart_legend"
-	"github.com/GoAdminGroup/themes/adminlte/components/description"
-	"github.com/GoAdminGroup/themes/adminlte/components/infobox"
-	"github.com/GoAdminGroup/themes/adminlte/components/productlist"
-	"github.com/GoAdminGroup/themes/adminlte/components/progress_group"
-	"github.com/GoAdminGroup/themes/adminlte/components/smallbox"
+	"github.com/purpose168/GoAdmin-themes/adminlte/components/chart_legend"
+	"github.com/purpose168/GoAdmin-themes/adminlte/components/description"
+	"github.com/purpose168/GoAdmin-themes/adminlte/components/infobox"
+	"github.com/purpose168/GoAdmin-themes/adminlte/components/productlist"
+	"github.com/purpose168/GoAdmin-themes/adminlte/components/progress_group"
+	"github.com/purpose168/GoAdmin-themes/adminlte/components/smallbox"
 	"github.com/purpose168/GoAdmin/context"
 	tmpl "github.com/purpose168/GoAdmin/template"
 	"github.com/purpose168/GoAdmin/template/chartjs"
