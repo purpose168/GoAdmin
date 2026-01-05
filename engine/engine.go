@@ -247,7 +247,7 @@ func (eng *Engine) AddAuthService(processor auth.Processor) *Engine {
 }
 
 // ============================
-// Config APIs
+// 配置 API
 // ============================
 
 // announce 打印初始化公告
@@ -411,19 +411,19 @@ func (eng *Engine) AddAdapter(ada adapter.WebFrameWork) *Engine {
 	return eng
 }
 
-// defaultAdapter is the default adapter of engine.
+// defaultAdapter 是引擎的默认适配器
 var defaultAdapter adapter.WebFrameWork
 
 var engine *Engine
 
-// navButtons is the default buttons in the navigation bar.
+// navButtons 是导航栏中的默认按钮
 var navButtons = new(types.Buttons)
 
 func emptyAdapterPanic() {
 	logger.Panic(language.Get("adapter is nil, import the default adapter or use addadapter method add the adapter"))
 }
 
-// Register set default adapter of engine.
+// Register 设置引擎的默认适配器
 func Register(ada adapter.WebFrameWork) {
 	if ada == nil {
 		emptyAdapterPanic()
@@ -431,18 +431,18 @@ func Register(ada adapter.WebFrameWork) {
 	defaultAdapter = ada
 }
 
-// User call the User method of defaultAdapter.
+// User 调用 defaultAdapter 的 User 方法
 func User(ctx interface{}) (models.UserModel, bool) {
 	return defaultAdapter.User(ctx)
 }
 
-// User call the User method of engine adapter.
+// User 调用引擎适配器的 User 方法
 func (eng *Engine) User(ctx interface{}) (models.UserModel, bool) {
 	return eng.Adapter.User(ctx)
 }
 
 // ============================
-// DB Connection APIs
+// 数据库连接 API
 // ============================
 
 // DB 返回给定驱动的数据库连接
@@ -704,7 +704,7 @@ func (eng *Engine) deferHandler(conn db.Connection) context.Handler {
 				}
 
 				if errMsg == "" {
-					errMsg = "system error"
+					errMsg = "系统错误"
 				}
 
 				if ctx.WantJSON() {
@@ -719,30 +719,30 @@ func (eng *Engine) deferHandler(conn db.Connection) context.Handler {
 	}
 }
 
-// wrapWithAuthMiddleware wrap a auth middleware to the given handler.
+// wrapWithAuthMiddleware 将认证中间件包装到给定的处理器中
 func (eng *Engine) wrapWithAuthMiddleware(handler context.Handler) context.Handlers {
 	conn := db.GetConnection(eng.Services)
 	return []context.Handler{eng.deferHandler(conn), response.OffLineHandler, auth.Middleware(conn), handler}
 }
 
-// wrapWithAuthMiddleware wrap a auth middleware to the given handler.
+// wrap 将处理器包装到中间件链中（不包含认证中间件）
 func (eng *Engine) wrap(handler context.Handler) context.Handlers {
 	conn := db.GetConnection(eng.Services)
 	return []context.Handler{eng.deferHandler(conn), response.OffLineHandler, handler}
 }
 
 // ============================
-// Initialize methods
+// 初始化方法
 // ============================
 
-// AddNavButtons add the nav buttons.
+// AddNavButtons 添加导航按钮
 func (eng *Engine) AddNavButtons(title template2.HTML, icon string, action types.Action) *Engine {
 	btn := types.GetNavButton(title, icon, action)
 	*eng.NavButtons = append(*eng.NavButtons, btn)
 	return eng
 }
 
-// AddNavButtonsRaw add the nav buttons.
+// AddNavButtonsRaw 添加导航按钮（原始按钮对象）
 func (eng *Engine) AddNavButtonsRaw(btns ...types.Button) *Engine {
 	*eng.NavButtons = append(*eng.NavButtons, btns...)
 	return eng
@@ -770,6 +770,13 @@ func printInitMsg(msg string) {
 	logger.Info(msg)
 }
 
+// initJumpNavButtons 初始化跳转导航按钮
+//
+// 工作流程：
+//   - 打印初始化导航按钮消息
+//   - 遍历所有导航按钮参数，添加到导航栏
+//   - 将导航按钮设置为全局导航按钮
+//   - 将导航按钮服务添加到服务列表中
 func (eng *Engine) initJumpNavButtons() {
 	printInitMsg(language.Get("initialize navigation buttons"))
 	for _, param := range eng.initNavJumpButtonParams() {
@@ -779,6 +786,16 @@ func (eng *Engine) initJumpNavButtons() {
 	eng.Services.Add(ui.ServiceKey, ui.NewService(eng.NavButtons))
 }
 
+// initPlugins 初始化插件
+//
+// 工作流程：
+//   - 打印初始化插件消息
+//   - 添加admin插件和获取的插件列表
+//   - 创建插件生成器列表
+//   - 遍历所有插件（除了admin插件）
+//   - 初始化每个插件
+//   - 如果插件需要安装，添加插件生成器
+//   - 合并所有插件的生成器
 func (eng *Engine) initPlugins() {
 
 	printInitMsg(language.Get("initialize plugins"))
@@ -802,7 +819,7 @@ func (eng *Engine) initPlugins() {
 	plugins.Add(adm)
 }
 
-// initNavJumpButtonParams初始化导航栏跳转按钮参数
+// initNavJumpButtonParams 初始化导航栏跳转按钮参数
 //
 // 返回值：
 //   - []navJumpButtonParam: 导航栏按钮参数列表
@@ -849,7 +866,7 @@ func (eng *Engine) initNavJumpButtonParams() []navJumpButtonParam {
 	}
 }
 
-// initSiteSetting初始化站点设置
+// initSiteSetting 初始化站点设置
 //
 // 工作原理：
 //   - 从数据库加载站点配置
@@ -878,10 +895,10 @@ func (eng *Engine) initSiteSetting() {
 }
 
 // ============================
-// HTML Content Render APIs
+// HTML 内容渲染 API
 // ============================
 
-// Content调用Engine适配器的Content方法
+// Content 调用Engine适配器的Content方法
 //
 // 参数说明：
 //   - ctx: Web框架上下文
@@ -909,7 +926,7 @@ func (eng *Engine) Content(ctx interface{}, panel types.GetPanelFn) {
 	eng.Adapter.Content(ctx, panel, eng.AdminPlugin().GetAddOperationFn(), *eng.NavButtons...)
 }
 
-// Content调用defaultAdapter的Content方法
+// Content 调用defaultAdapter的Content方法
 //
 // 参数说明：
 //   - ctx: Web框架上下文
@@ -937,7 +954,7 @@ func Content(ctx interface{}, panel types.GetPanelFn) {
 	defaultAdapter.Content(ctx, panel, engine.AdminPlugin().GetAddOperationFn(), *navButtons...)
 }
 
-// Data将路由和对应的处理器注入到Web框架
+// Data 将路由和对应的处理器注入到Web框架
 //
 // 参数说明：
 //   - method: HTTP方法（GET、POST等）
@@ -1023,7 +1040,7 @@ func (eng *Engine) HTML(method, url string, fn types.GetPanelInfoFn, noAuth ...b
 		}))
 
 		if hasError != nil {
-			logger.Error(fmt.Sprintf("error: %s adapter content, ", eng.Adapter.Name()), hasError)
+			logger.Error(fmt.Sprintf("错误：%s 适配器内容，", eng.Adapter.Name()), hasError)
 		}
 
 		ctx.HTMLByte(http.StatusOK, buf.Bytes())
@@ -1099,7 +1116,7 @@ func (eng *Engine) HTMLFile(method, url, path string, data map[string]interface{
 		}))
 
 		if hasError != nil {
-			logger.Error(fmt.Sprintf("error: %s adapter content, ", eng.Adapter.Name()), hasError)
+			logger.Error(fmt.Sprintf("错误：%s 适配器内容，", eng.Adapter.Name()), hasError)
 		}
 
 		ctx.HTMLByte(http.StatusOK, buf.Bytes())
@@ -1164,7 +1181,7 @@ func (eng *Engine) HTMLFilesNoAuth(method, url string, data map[string]interface
 	eng.Adapter.AddHandler(method, url, eng.wrap(eng.htmlFilesHandler(data, files...)))
 }
 
-// htmlFilesHandler创建处理器，返回给定HTML文件路径的面板内容
+// htmlFilesHandler 创建处理器，返回给定HTML文件路径的面板内容
 //
 // 参数说明：
 //   - data: 模板数据
@@ -1218,14 +1235,14 @@ func (eng *Engine) htmlFilesHandler(data map[string]interface{}, files ...string
 		}))
 
 		if hasError != nil {
-			logger.Error(fmt.Sprintf("error: %s adapter content, ", eng.Adapter.Name()), hasError)
+			logger.Error(fmt.Sprintf("错误：%s 适配器内容，", eng.Adapter.Name()), hasError)
 		}
 
 		ctx.HTMLByte(http.StatusOK, buf.Bytes())
 	}
 }
 
-// errorPanelHTML将错误面板HTML添加到上下文响应
+// errorPanelHTML 将错误面板HTML添加到上下文响应
 //
 // 参数说明：
 //   - ctx: 上下文对象
@@ -1256,17 +1273,17 @@ func (eng *Engine) errorPanelHTML(ctx *context.Context, buf *bytes.Buffer, err e
 	}))
 
 	if hasError != nil {
-		logger.Error(fmt.Sprintf("error: %s adapter content, ", eng.Adapter.Name()), hasError)
+		logger.Error(fmt.Sprintf("错误：%s 适配器内容，", eng.Adapter.Name()), hasError)
 	}
 
 	ctx.HTMLByte(http.StatusOK, buf.Bytes())
 }
 
 // ============================
-// Admin Plugin APIs
+// Admin 插件 API
 // ============================
 
-// AddGenerators添加admin生成器
+// AddGenerators 添加admin生成器
 //
 // 参数说明：
 //   - list: 生成器列表
@@ -1298,7 +1315,7 @@ func (eng *Engine) AddGenerators(list ...table.GeneratorList) *Engine {
 	return eng
 }
 
-// AdminPlugin获取admin插件，如果不存在则创建一个
+// AdminPlugin 获取admin插件，如果不存在则创建一个
 //
 // 返回值：
 //   - *admin.Admin: admin插件实例
@@ -1326,7 +1343,7 @@ func (eng *Engine) AdminPlugin() *admin.Admin {
 	return adm
 }
 
-// SetCaptcha设置验证码配置
+// SetCaptcha 设置验证码配置
 //
 // 参数说明：
 //   - captcha: 验证码配置
@@ -1354,7 +1371,7 @@ func (eng *Engine) SetCaptcha(captcha map[string]string) *Engine {
 	return eng
 }
 
-// SetCaptchaDriver使用驱动设置验证码配置
+// SetCaptchaDriver 使用驱动设置验证码配置
 //
 // 参数说明：
 //   - driver: 验证码驱动名称
@@ -1378,7 +1395,7 @@ func (eng *Engine) SetCaptchaDriver(driver string) *Engine {
 	return eng
 }
 
-// AddGenerator添加表格模型生成器
+// AddGenerator 添加表格模型生成器
 //
 // 参数说明：
 //   - key: 生成器键名
@@ -1403,7 +1420,7 @@ func (eng *Engine) AddGenerator(key string, g table.Generator) *Engine {
 	return eng
 }
 
-// AddGlobalDisplayProcessFn调用types.AddGlobalDisplayProcessFn
+// AddGlobalDisplayProcessFn 调用types.AddGlobalDisplayProcessFn
 //
 // 参数说明：
 //   - f: 字段过滤函数
@@ -1429,7 +1446,7 @@ func (eng *Engine) AddGlobalDisplayProcessFn(f types.FieldFilterFn) *Engine {
 	return eng
 }
 
-// AddDisplayFilterLimit调用types.AddDisplayFilterLimit
+// AddDisplayFilterLimit 调用types.AddDisplayFilterLimit
 //
 // 参数说明：
 //   - limit: 显示长度限制
@@ -1453,7 +1470,7 @@ func (eng *Engine) AddDisplayFilterLimit(limit int) *Engine {
 	return eng
 }
 
-// AddDisplayFilterTrimSpace调用types.AddDisplayFilterTrimSpace
+// AddDisplayFilterTrimSpace 调用types.AddDisplayFilterTrimSpace
 //
 // 返回值：
 //   - *Engine: 返回Engine本身，支持链式调用
@@ -1474,7 +1491,7 @@ func (eng *Engine) AddDisplayFilterTrimSpace() *Engine {
 	return eng
 }
 
-// AddDisplayFilterSubstr调用types.AddDisplayFilterSubstr
+// AddDisplayFilterSubstr 调用types.AddDisplayFilterSubstr
 //
 // 参数说明：
 //   - start: 起始位置
@@ -1499,7 +1516,7 @@ func (eng *Engine) AddDisplayFilterSubstr(start int, end int) *Engine {
 	return eng
 }
 
-// AddDisplayFilterToTitle调用types.AddDisplayFilterToTitle
+// AddDisplayFilterToTitle 调用types.AddDisplayFilterToTitle
 //
 // 返回值：
 //   - *Engine: 返回Engine本身，支持链式调用
@@ -1520,7 +1537,7 @@ func (eng *Engine) AddDisplayFilterToTitle() *Engine {
 	return eng
 }
 
-// AddDisplayFilterToUpper调用types.AddDisplayFilterToUpper
+// AddDisplayFilterToUpper 调用types.AddDisplayFilterToUpper
 //
 // 返回值：
 //   - *Engine: 返回Engine本身，支持链式调用
@@ -1541,7 +1558,7 @@ func (eng *Engine) AddDisplayFilterToUpper() *Engine {
 	return eng
 }
 
-// AddDisplayFilterToLower调用types.AddDisplayFilterToLower
+// AddDisplayFilterToLower 调用types.AddDisplayFilterToLower
 //
 // 返回值：
 //   - *Engine: 返回Engine本身，支持链式调用
@@ -1562,7 +1579,7 @@ func (eng *Engine) AddDisplayFilterToLower() *Engine {
 	return eng
 }
 
-// AddDisplayFilterXssFilter调用types.AddDisplayFilterXssFilter
+// AddDisplayFilterXssFilter 调用types.AddDisplayFilterXssFilter
 //
 // 返回值：
 //   - *Engine: 返回Engine本身，支持链式调用
@@ -1583,7 +1600,7 @@ func (eng *Engine) AddDisplayFilterXssFilter() *Engine {
 	return eng
 }
 
-// AddDisplayFilterXssJsFilter调用types.AddDisplayFilterXssJsFilter
+// AddDisplayFilterXssJsFilter 调用types.AddDisplayFilterXssJsFilter
 //
 // 返回值：
 //   - *Engine: 返回Engine本身，支持链式调用

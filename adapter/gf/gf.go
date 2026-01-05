@@ -2,6 +2,45 @@
 // 本源代码的使用受 Apache-2.0 风格许可证约束
 // 该许可证可在 LICENSE 文件中找到
 
+// gf 包提供了 GoAdmin 与 GoFrame (GF) 框架的适配器实现
+//
+// 该适配器作为 GoAdmin 管理后台与 GoFrame 框架之间的桥梁，使得 GoAdmin
+// 可以在 GoFrame 应用中无缝运行。它实现了 adapter.WebFrameWork 接口，
+// 提供了路由处理、请求上下文管理、响应写入等核心功能。
+//
+// 主要功能：
+//   - 路由注册：将 GoAdmin 的路由注册到 GoFrame 框架中
+//   - 请求处理：处理 HTTP 请求并传递给 GoAdmin 引擎
+//   - 响应写入：将 GoAdmin 的响应写入到 GoFrame 的响应对象中
+//   - 上下文管理：管理请求上下文和用户会话
+//   - 参数提取：从路由参数和查询参数中提取数据
+//
+// 使用示例：
+//
+//	import (
+//	    "github.com/gogf/gf/net/ghttp"
+//	    gfadapter "github.com/purpose168/GoAdmin/adapter/gf"
+//	    "github.com/purpose168/GoAdmin/plugins/admin"
+//	)
+//
+//	func main() {
+//	    s := ghttp.GetServer()
+//
+//	    // 使用 GF 适配器初始化 GoAdmin
+//	    admin.SetAdapter(gfadapter.New())
+//
+//	    // 添加路由
+//	    admin.AddHandler("GET", "/admin", func(ctx *ghttp.Request) {
+//	        // 处理逻辑
+//	    })
+//
+//	    s.Run()
+//	}
+//
+// 注意事项：
+//   - GoFrame 的路由参数格式为 :param，适配器会自动转换为 URL 查询参数
+//   - 适配器支持 PJAX 请求，提供更流畅的用户体验
+//   - 需要确保传入的参数类型正确，否则会返回错误或 panic
 package gf
 
 import (
