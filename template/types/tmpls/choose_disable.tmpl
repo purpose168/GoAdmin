@@ -1,15 +1,21 @@
 {{define "choose_disable"}}
     <script>
+        // 监听Select2选择事件
         $("select.{{.Field}}").on("select2:select", function (e) {
+            // 检查选中的值是否在指定值列表中
             if ({{.Value}}.indexOf(e.params.data.text) !== -1 || {{.Value}}.indexOf(e.params.data.id) !== -1) {
+                // 遍历需要禁用的字段
                 {{range $key, $fields := .ChooseFields}}
 
+                // 禁用指定字段
                 $(".{{$fields}}").prop('disabled', true);
 
                 {{end}}
             } else {
+                // 遍历需要启用的字段
                 {{range $key, $fields := .ChooseFields}}
 
+                // 启用指定字段
                 $(".{{$fields}}").prop('disabled', false);
 
                 {{end}}

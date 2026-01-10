@@ -1,13 +1,13 @@
 # ************************************************************
-# Sequel Pro SQL dump
+# Sequel Pro SQL 转储
 # Version 4541
 #
 # http://www.sequelpro.com/
 # https://github.com/sequelpro/sequelpro
 #
-# Host: 127.0.0.1 (MySQL 5.7.19)
-# Database: go-admin-test
-# Generation Time: 2020-03-14 09:34:40 +0000
+# 主机: 127.0.0.1 (MySQL 5.7.19)
+# 数据库: go-admin-test
+# 生成时间: 2020-03-14 09:34:40 +0000
 # ************************************************************
 
 
@@ -20,24 +20,24 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
-# Dump of table goadmin_menu
+# goadmin_menu 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_menu`;
 
 CREATE TABLE `goadmin_menu` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` int(11) unsigned NOT NULL DEFAULT '0',
-  `type` tinyint(4) unsigned NOT NULL DEFAULT '0',
-  `order` int(11) unsigned NOT NULL DEFAULT '0',
-  `title` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `icon` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `uri` varchar(3000) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `plugin_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `header` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `uuid` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `parent_id` int(11) unsigned NOT NULL DEFAULT '0',  -- 父级菜单ID
+  `type` tinyint(4) unsigned NOT NULL DEFAULT '0',  -- 菜单类型
+  `order` int(11) unsigned NOT NULL DEFAULT '0',  -- 排序
+  `title` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 菜单标题
+  `icon` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 图标
+  `uri` varchar(3000) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',  -- 路径
+  `plugin_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',  -- 插件名称
+  `header` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 菜单头部
+  `uuid` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- UUID
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -59,39 +59,39 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table goadmin_operation_log
+# goadmin_operation_log 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_operation_log`;
 
 CREATE TABLE `goadmin_operation_log` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) unsigned NOT NULL,
-  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `method` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ip` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `input` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `user_id` int(11) unsigned NOT NULL,  -- 用户ID
+  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 请求路径
+  `method` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 请求方法
+  `ip` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,  -- IP地址
+  `input` text COLLATE utf8mb4_unicode_ci NOT NULL,  -- 输入参数
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`),
   KEY `admin_operation_log_user_id_index` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 
-# Dump of table goadmin_permissions
+# goadmin_permissions 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_permissions`;
 
 CREATE TABLE `goadmin_permissions` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `http_method` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `http_path` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 权限名称
+  `slug` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 权限标识
+  `http_method` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- HTTP方法
+  `http_path` text COLLATE utf8mb4_unicode_ci NOT NULL,  -- HTTP路径
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`),
   UNIQUE KEY `admin_permissions_name_unique` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -107,33 +107,33 @@ VALUES
 /*!40000 ALTER TABLE `goadmin_permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
-# Dump of table goadmin_site
+# goadmin_site 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_site`;
 
 CREATE TABLE `goadmin_site` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `key` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `value` longtext COLLATE utf8mb4_unicode_ci,
-  `description` varchar(3000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `state` tinyint(3) unsigned NOT NULL DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `key` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 键
+  `value` longtext COLLATE utf8mb4_unicode_ci,  -- 值
+  `description` varchar(3000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 描述
+  `state` tinyint(3) unsigned NOT NULL DEFAULT '0',  -- 状态
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-# Dump of table goadmin_role_menu
+# goadmin_role_menu 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_role_menu`;
 
 CREATE TABLE `goadmin_role_menu` (
-  `role_id` int(11) unsigned NOT NULL,
-  `menu_id` int(11) unsigned NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `role_id` int(11) unsigned NOT NULL,  -- 角色ID
+  `menu_id` int(11) unsigned NOT NULL,  -- 菜单ID
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   KEY `admin_role_menu_role_id_menu_id_index` (`role_id`,`menu_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -152,16 +152,16 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table goadmin_role_permissions
+# goadmin_role_permissions 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_role_permissions`;
 
 CREATE TABLE `goadmin_role_permissions` (
-  `role_id` int(11) unsigned NOT NULL,
-  `permission_id` int(11) unsigned NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `role_id` int(11) unsigned NOT NULL,  -- 角色ID
+  `permission_id` int(11) unsigned NOT NULL,  -- 权限ID
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   UNIQUE KEY `admin_role_permissions` (`role_id`,`permission_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -178,16 +178,16 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table goadmin_role_users
+# goadmin_role_users 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_role_users`;
 
 CREATE TABLE `goadmin_role_users` (
-  `role_id` int(11) unsigned NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `role_id` int(11) unsigned NOT NULL,  -- 角色ID
+  `user_id` int(11) unsigned NOT NULL,  -- 用户ID
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   UNIQUE KEY `admin_user_roles` (`role_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -203,17 +203,17 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table goadmin_roles
+# goadmin_roles 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_roles`;
 
 CREATE TABLE `goadmin_roles` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 角色名称
+  `slug` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 角色标识
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`),
   UNIQUE KEY `admin_roles_name_unique` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -230,32 +230,32 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table goadmin_session
+# goadmin_session 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_session`;
 
 CREATE TABLE `goadmin_session` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `sid` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `values` varchar(3000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `sid` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',  -- 会话ID
+  `values` varchar(3000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',  -- 会话值
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
-# Dump of table goadmin_user_permissions
+# goadmin_user_permissions 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_user_permissions`;
 
 CREATE TABLE `goadmin_user_permissions` (
-  `user_id` int(11) unsigned NOT NULL,
-  `permission_id` int(11) unsigned NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `user_id` int(11) unsigned NOT NULL,  -- 用户ID
+  `permission_id` int(11) unsigned NOT NULL,  -- 权限ID
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   UNIQUE KEY `admin_user_permissions` (`user_id`,`permission_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -271,20 +271,20 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table goadmin_users
+# goadmin_users 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `goadmin_users`;
 
 CREATE TABLE `goadmin_users` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 用户名
+  `password` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',  -- 密码
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,  -- 姓名
+  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 头像
+  `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 记住令牌
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`),
   UNIQUE KEY `admin_users_username_unique` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -301,16 +301,16 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table member
+# member 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `member`;
 
 CREATE TABLE `member` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 名称
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -332,17 +332,17 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table user_like_books
+# user_like_books 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `user_like_books`;
 
 CREATE TABLE `user_like_books` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(10) unsigned NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `user_id` int(10) unsigned NOT NULL,  -- 用户ID
+  `name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 名称
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -358,32 +358,32 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table users
+# users 表的转储
 # ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `users`;
 
 CREATE TABLE `users` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `homepage` varchar(3000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `birthday` timestamp NULL DEFAULT NULL,
-  `country` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `member_id` tinyint(3) unsigned NOT NULL DEFAULT '1',
-  `city` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `password` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ip` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `certificate` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `money` int(10) unsigned DEFAULT NULL,
-  `age` int(10) unsigned DEFAULT NULL,
-  `resume` text COLLATE utf8mb4_unicode_ci,
-  `gender` tinyint(4) unsigned DEFAULT NULL,
-  `fruit` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `drink` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `experience` tinyint(3) unsigned DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,  -- 主键ID
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 姓名
+  `homepage` varchar(3000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 主页
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 邮箱
+  `birthday` timestamp NULL DEFAULT NULL,  -- 生日
+  `country` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 国家
+  `member_id` tinyint(3) unsigned NOT NULL DEFAULT '1',  -- 会员ID
+  `city` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 城市
+  `password` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 密码
+  `ip` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- IP地址
+  `certificate` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 证书
+  `money` int(10) unsigned DEFAULT NULL,  -- 金额
+  `age` int(10) unsigned DEFAULT NULL,  -- 年龄
+  `resume` text COLLATE utf8mb4_unicode_ci,  -- 简历
+  `gender` tinyint(4) unsigned DEFAULT NULL,  -- 性别
+  `fruit` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 水果
+  `drink` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,  -- 饮料
+  `experience` tinyint(3) unsigned DEFAULT NULL,  -- 经验
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新时间
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

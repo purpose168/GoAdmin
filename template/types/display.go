@@ -13,19 +13,23 @@ import (
 	"golang.org/x/text/language"
 )
 
+// DisplayFnGenerator 显示函数生成器接口
 type DisplayFnGenerator interface {
-	Get(ctx *context.Context, args ...interface{}) FieldFilterFn
-	JS() template.HTML
-	HTML() template.HTML
+	Get(ctx *context.Context, args ...interface{}) FieldFilterFn // 获取显示函数
+	JS() template.HTML                                           // 返回JavaScript代码
+	HTML() template.HTML                                         // 返回HTML代码
 }
 
+// BaseDisplayFnGenerator 基础显示函数生成器结构体
 type BaseDisplayFnGenerator struct{}
 
-func (base *BaseDisplayFnGenerator) JS() template.HTML   { return "" }
-func (base *BaseDisplayFnGenerator) HTML() template.HTML { return "" }
+func (base *BaseDisplayFnGenerator) JS() template.HTML   { return "" } // 返回空JavaScript代码
+func (base *BaseDisplayFnGenerator) HTML() template.HTML { return "" } // 返回空HTML代码
 
+// displayFnGens 显示函数生成器映射
 var displayFnGens = make(map[string]DisplayFnGenerator)
 
+// RegisterDisplayFnGenerator 注册显示函数生成器
 func RegisterDisplayFnGenerator(key string, gen DisplayFnGenerator) {
 	if _, ok := displayFnGens[key]; ok {
 		panic("display function generator has been registered")
@@ -33,14 +37,17 @@ func RegisterDisplayFnGenerator(key string, gen DisplayFnGenerator) {
 	displayFnGens[key] = gen
 }
 
+// FieldDisplay 字段显示结构体
 type FieldDisplay struct {
-	Display              FieldFilterFn
-	DisplayProcessChains DisplayProcessFnChains
+	Display              FieldFilterFn          // 显示函数
+	DisplayProcessChains DisplayProcessFnChains // 显示处理函数链
 }
 
+// ToDisplay 将字段值转换为显示格式
 func (f FieldDisplay) ToDisplay(value FieldModel) interface{} {
 	val := f.Display(value)
 
+	// 如果存在显示处理链且值不是选择结果
 	if len(f.DisplayProcessChains) > 0 && f.IsNotSelectRes(val) {
 		valStr := fmt.Sprintf("%v", val)
 		for _, process := range f.DisplayProcessChains {
@@ -56,6 +63,7 @@ func (f FieldDisplay) ToDisplay(value FieldModel) interface{} {
 	return val
 }
 
+// IsNotSelectRes 检查值是否不是选择结果
 func (f FieldDisplay) IsNotSelectRes(v interface{}) bool {
 	switch v.(type) {
 	case template.HTML:
@@ -69,6 +77,7 @@ func (f FieldDisplay) IsNotSelectRes(v interface{}) bool {
 	}
 }
 
+// ToDisplayHTML 将字段值转换为HTML格式
 func (f FieldDisplay) ToDisplayHTML(value FieldModel) template.HTML {
 	v := f.ToDisplay(value)
 	if h, ok := v.(template.HTML); ok {
@@ -86,6 +95,7 @@ func (f FieldDisplay) ToDisplayHTML(value FieldModel) template.HTML {
 	}
 }
 
+// ToDisplayString 将字段值转换为字符串格式
 func (f FieldDisplay) ToDisplayString(value FieldModel) string {
 	v := f.ToDisplay(value)
 	if h, ok := v.(template.HTML); ok {
@@ -103,6 +113,7 @@ func (f FieldDisplay) ToDisplayString(value FieldModel) string {
 	}
 }
 
+// ToDisplayStringArray 将字段值转换为字符串数组格式
 func (f FieldDisplay) ToDisplayStringArray(value FieldModel) []string {
 	v := f.ToDisplay(value)
 	if h, ok := v.(template.HTML); ok {
@@ -124,6 +135,7 @@ func (f FieldDisplay) ToDisplayStringArray(value FieldModel) []string {
 	}
 }
 
+// ToDisplayStringArrayArray 将字段值转换为字符串二维数组格式
 func (f FieldDisplay) ToDisplayStringArrayArray(value FieldModel) [][]string {
 	v := f.ToDisplay(value)
 	if h, ok := v.(template.HTML); ok {
@@ -147,6 +159,7 @@ func (f FieldDisplay) ToDisplayStringArrayArray(value FieldModel) [][]string {
 	}
 }
 
+// AddLimit 添加长度限制处理函数
 func (f FieldDisplay) AddLimit(limit int) DisplayProcessFnChains {
 	return f.DisplayProcessChains.Add(func(value FieldModel) interface{} {
 		if limit > len(value.Value) {
@@ -159,12 +172,14 @@ func (f FieldDisplay) AddLimit(limit int) DisplayProcessFnChains {
 	})
 }
 
+// AddTrimSpace 添加去除空格处理函数
 func (f FieldDisplay) AddTrimSpace() DisplayProcessFnChains {
 	return f.DisplayProcessChains.Add(func(value FieldModel) interface{} {
 		return strings.TrimSpace(value.Value)
 	})
 }
 
+// AddSubstr 添加子字符串处理函数
 func (f FieldDisplay) AddSubstr(start int, end int) DisplayProcessFnChains {
 	return f.DisplayProcessChains.Add(func(value FieldModel) interface{} {
 		if start > end || start > len(value.Value) || end < 0 {
@@ -180,38 +195,46 @@ func (f FieldDisplay) AddSubstr(start int, end int) DisplayProcessFnChains {
 	})
 }
 
+// AddToTitle 添加标题格式处理函数
 func (f FieldDisplay) AddToTitle() DisplayProcessFnChains {
 	return f.DisplayProcessChains.Add(func(value FieldModel) interface{} {
 		return cases.Title(language.Und).String(value.Value)
 	})
 }
 
+// AddToUpper 添加大写转换处理函数
 func (f FieldDisplay) AddToUpper() DisplayProcessFnChains {
 	return f.DisplayProcessChains.Add(func(value FieldModel) interface{} {
 		return strings.ToUpper(value.Value)
 	})
 }
 
+// AddToLower 添加小写转换处理函数
 func (f FieldDisplay) AddToLower() DisplayProcessFnChains {
 	return f.DisplayProcessChains.Add(func(value FieldModel) interface{} {
 		return strings.ToLower(value.Value)
 	})
 }
 
+// DisplayProcessFnChains 显示处理函数链类型
 type DisplayProcessFnChains []FieldFilterFn
 
+// Valid 检查处理链是否有效
 func (d DisplayProcessFnChains) Valid() bool {
 	return len(d) > 0
 }
 
+// Add 添加处理函数到链中
 func (d DisplayProcessFnChains) Add(f FieldFilterFn) DisplayProcessFnChains {
 	return append(d, f)
 }
 
+// Append 追加处理函数链
 func (d DisplayProcessFnChains) Append(f DisplayProcessFnChains) DisplayProcessFnChains {
 	return append(d, f...)
 }
 
+// Copy 复制处理函数链
 func (d DisplayProcessFnChains) Copy() DisplayProcessFnChains {
 	if len(d) == 0 {
 		return make(DisplayProcessFnChains, 0)
@@ -222,6 +245,7 @@ func (d DisplayProcessFnChains) Copy() DisplayProcessFnChains {
 	}
 }
 
+// chooseDisplayProcessChains 选择显示处理函数链
 func chooseDisplayProcessChains(internal DisplayProcessFnChains) DisplayProcessFnChains {
 	if len(internal) > 0 {
 		return internal
@@ -229,44 +253,55 @@ func chooseDisplayProcessChains(internal DisplayProcessFnChains) DisplayProcessF
 	return globalDisplayProcessChains.Copy()
 }
 
+// globalDisplayProcessChains 全局显示处理函数链
 var globalDisplayProcessChains = make(DisplayProcessFnChains, 0)
 
+// AddGlobalDisplayProcessFn 添加全局显示处理函数
 func AddGlobalDisplayProcessFn(f FieldFilterFn) {
 	globalDisplayProcessChains = globalDisplayProcessChains.Add(f)
 }
 
+// AddLimit 添加长度限制处理函数到全局链
 func AddLimit(limit int) DisplayProcessFnChains {
 	return addLimit(limit, globalDisplayProcessChains)
 }
 
+// AddTrimSpace 添加去除空格处理函数到全局链
 func AddTrimSpace() DisplayProcessFnChains {
 	return addTrimSpace(globalDisplayProcessChains)
 }
 
+// AddSubstr 添加子字符串处理函数到全局链
 func AddSubstr(start int, end int) DisplayProcessFnChains {
 	return addSubstr(start, end, globalDisplayProcessChains)
 }
 
+// AddToTitle 添加标题格式处理函数到全局链
 func AddToTitle() DisplayProcessFnChains {
 	return addToTitle(globalDisplayProcessChains)
 }
 
+// AddToUpper 添加大写转换处理函数到全局链
 func AddToUpper() DisplayProcessFnChains {
 	return addToUpper(globalDisplayProcessChains)
 }
 
+// AddToLower 添加小写转换处理函数到全局链
 func AddToLower() DisplayProcessFnChains {
 	return addToLower(globalDisplayProcessChains)
 }
 
+// AddXssFilter 添加XSS过滤处理函数到全局链
 func AddXssFilter() DisplayProcessFnChains {
 	return addXssFilter(globalDisplayProcessChains)
 }
 
+// AddXssJsFilter 添加XSS JavaScript过滤处理函数到全局链
 func AddXssJsFilter() DisplayProcessFnChains {
 	return addXssJsFilter(globalDisplayProcessChains)
 }
 
+// addLimit 添加长度限制处理函数
 func addLimit(limit int, chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		if limit > len(value.Value) {
@@ -280,6 +315,7 @@ func addLimit(limit int, chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// addTrimSpace 添加去除空格处理函数
 func addTrimSpace(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		return strings.TrimSpace(value.Value)
@@ -287,6 +323,7 @@ func addTrimSpace(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// addSubstr 添加子字符串处理函数
 func addSubstr(start int, end int, chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		if start > end || start > len(value.Value) || end < 0 {
@@ -303,6 +340,7 @@ func addSubstr(start int, end int, chains DisplayProcessFnChains) DisplayProcess
 	return chains
 }
 
+// addToTitle 添加标题格式处理函数
 func addToTitle(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		return cases.Title(language.Und).String(value.Value)
@@ -310,6 +348,7 @@ func addToTitle(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// addToUpper 添加大写转换处理函数
 func addToUpper(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		return strings.ToUpper(value.Value)
@@ -317,6 +356,7 @@ func addToUpper(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// addToLower 添加小写转换处理函数
 func addToLower(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		return strings.ToLower(value.Value)
@@ -324,6 +364,7 @@ func addToLower(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// addXssFilter 添加XSS过滤处理函数
 func addXssFilter(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		return html.EscapeString(value.Value)
@@ -331,6 +372,7 @@ func addXssFilter(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// addXssJsFilter 添加XSS JavaScript过滤处理函数
 func addXssJsFilter(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	chains = chains.Add(func(value FieldModel) interface{} {
 		replacer := strings.NewReplacer("<script>", "&lt;script&gt;", "</script>", "&lt;/script&gt;")
@@ -339,7 +381,9 @@ func addXssJsFilter(chains DisplayProcessFnChains) DisplayProcessFnChains {
 	return chains
 }
 
+// setDefaultDisplayFnOfFormType 设置表单类型的默认显示函数
 func setDefaultDisplayFnOfFormType(f *FormPanel, typ form.Type) {
+	// 如果是多文件类型
 	if typ.IsMultiFile() {
 		f.FieldList[f.curFieldListIndex].Display = func(value FieldModel) interface{} {
 			if value.Value == "" {
@@ -357,6 +401,7 @@ func setDefaultDisplayFnOfFormType(f *FormPanel, typ form.Type) {
 			return res
 		}
 	}
+	// 如果是选择类型
 	if typ.IsSelect() {
 		f.FieldList[f.curFieldListIndex].Display = func(value FieldModel) interface{} {
 			return strings.Split(value.Value, ",")

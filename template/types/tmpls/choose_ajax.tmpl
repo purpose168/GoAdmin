@@ -1,103 +1,149 @@
 {{define "choose_ajax"}}
     <script>
 
+        // 更新双列表框（Dual Listbox）的选项
         let {{.Field}}_updateBoxSelections = function (selectObj, new_opts) {
+            // 清空选择对象的内容
             selectObj.html('');
+            // 遍历新选项数组
             new_opts.forEach(function (opt) {
+                // 向选择对象添加新的选项
                 selectObj.append($('<option value="' + opt["id"] + '">' + opt["text"] + '</option>'));
             });
+            // 刷新双列表框显示
             selectObj.bootstrapDualListbox('refresh', true);
         };
 
+        // 发送AJAX请求处理选择事件
         let {{.Field}}_req = function (selectObj, box, event) {
             $.ajax({
-                url: "{{.Url}}",
-                type: 'post',
-                dataType: 'text',
+                url: "{{.Url}}",  // 请求URL
+                type: 'post',  // 请求类型为POST
+                dataType: 'text',  // 数据类型为文本
                 data: {
-                    'value': $("select.{{.Field}}").val(),
-                    {{.PassValue}}
-                    'event': event
+                    'value': $("select.{{.Field}}").val(),  // 获取当前选择值
+                    {{.PassValue}}  // 传递的额外参数
+                    'event': event  // 事件类型
                 },
                 success: function (data) {
+                    // 如果返回数据是字符串，则解析为JSON对象
                     if (typeof (data) === "string") {
                         data = JSON.parse(data);
                     }
+                    // 检查返回码是否为0（成功）
                     if (data.code === 0) {
                         {{if eq .ActionJS ""}}
 
+                        // 如果选择对象存在
                         if (selectObj.length > 0) {
+                            // 如果返回数据是对象类型
                             if (typeof (data.data) === "object") {
+                                // 如果是双列表框模式
                                 if (box) {
+                                    // 更新双列表框选项
                                     {{.Field}}_updateBoxSelections(selectObj, data.data)
                                 } else {
+                                    // 如果是多选模式，清空选择对象
                                     if (typeof (selectObj.attr("multiple")) !== "undefined") {
                                         selectObj.html("");
                                     }
+                                    // 使用Select2插件初始化选择框
                                     selectObj.select2({
                                         data: data.data
                                     });
                                 }
                             } else {
+                                // 如果是双列表框模式
                                 if (box) {
+                                    // 设置选中值并初始化Select2
                                     selectObj.val(data.data).select2()
                                 } else {
-
+                                    // 单选模式无需处理
                                 }
                             }
                         } else {
+                            // 直接设置隐藏字段的值
                             $('.{{.ChooseField}}').val(data.data);
                         }
 
                         {{else}}
 
+                        // 执行自定义的JavaScript操作
                         {{.ActionJS}}
 
                         {{end}}
                     } else {
+                        // 显示错误提示信息
                         swal(data.msg, '', 'error');
                     }
                 },
                 error: function () {
+                    // 请求失败时弹出错误提示
                     alert('error')
                 }
             });
         };
 
+        // 如果不是双列表框模式
         if ($("label[for='{{.Field}}']").next().find(".bootstrap-duallistbox-container").length === 0) {
+            // 监听Select2选择事件
             $("select.{{.Field}}").on("select2:select", function (e) {
+                // 获取关联字段的标识
                 let id = '{{.ChooseField}}';
+                // 获取关联的选择对象
                 let selectObj = $("select." + id);
+                // 如果选择对象存在
                 if (selectObj.length > 0) {
+                    // 清空选择值
                     selectObj.val("").select2();
+                    // 重置HTML内容为空选项
                     selectObj.html('<option value="" selected="selected"></option>')
                 }
+                // 发送AJAX请求处理选择事件
                 {{.Field}}_req(selectObj, false, "select");
             });
+            // 如果是多选模式
             if (typeof ($("select.{{.Field}}").attr("multiple")) !== "undefined") {
+                // 监听Select2取消选择事件
                 $("select.{{.Field}}").on("select2:unselect", function (e) {
+                    // 获取关联字段的标识
                     let id = '{{.ChooseField}}';
+                    // 获取关联的选择对象
                     let selectObj = $("select." + id);
+                    // 如果选择对象存在
                     if (selectObj.length > 0) {
+                        // 清空选择值
                         selectObj.val("").select2();
+                        // 重置HTML内容为空选项
                         selectObj.html('<option value="" selected="selected"></option>')
                     }
+                    // 发送AJAX请求处理取消选择事件
                     {{.Field}}_req(selectObj, false, "unselect");
                 })
             }
         } else {
+            // 双列表框模式：记录上一次的选择状态
             let {{.Field}}_lastState = $(".{{.Field}}").val();
 
+            // 监听双列表框的变化事件
             $(".{{.Field}}").on('change', function (e) {
+                // 获取新的选择状态
                 var newState = $(this).val();
+                // 检查是否有选项被取消选中
                 if ($({{.Field}}_lastState).not(newState).get().length > 0) {
+                    // 获取关联字段的标识
                     let id = '{{.ChooseField}}';
+                    // 发送AJAX请求处理取消选择事件
                     {{.Field}}_req($("." + id), true, "unselect");
                 }
+                // 检查是否有新选项被选中
                 if ($(newState).not({{.Field}}_lastState).get().length > 0) {
+                    // 获取关联字段的标识
                     let id = '{{.ChooseField}}';
+                    // 发送AJAX请求处理选择事件
                     {{.Field}}_req($("." + id), true, "select");
                 }
+                // 更新上一次的选择状态
                 {{.Field}}_lastState = newState;
             })
         }

@@ -53,30 +53,41 @@ func (m FieldModel) IsUpdate() bool {
 	return m.PostType == PostTypeUpdate
 }
 
-// PostFieldModel contains ID and value of the single query result and the current row data.
+// PostFieldModel 包含单个查询结果的ID和值以及当前行数据
 type PostFieldModel struct {
-	ID    string
-	Value FieldModelValue
-	Row   map[string]string
-	// Post type
+	ID    string            // 记录ID
+	Value FieldModelValue   // 字段模型值
+	Row   map[string]string // 当前行数据
+	// 提交类型
 	PostType PostType
 }
 
+// IsCreate 判断是否为创建操作
+// 返回: 如果是创建操作返回true，否则返回false
 func (m PostFieldModel) IsCreate() bool {
 	return m.PostType == PostTypeCreate
 }
 
+// IsUpdate 判断是否为更新操作
+// 返回: 如果是更新操作返回true，否则返回false
 func (m PostFieldModel) IsUpdate() bool {
 	return m.PostType == PostTypeUpdate
 }
 
+// InfoList 是信息项列表的别名
 type InfoList []map[string]InfoItem
 
+// InfoItem 表示信息项
 type InfoItem struct {
-	Content template.HTML `json:"content"`
-	Value   string        `json:"value"`
+	Content template.HTML `json:"content"` // HTML内容
+	Value   string        `json:"value"`   // 值
 }
 
+// GroupBy 根据标签组对信息列表进行分组
+// 参数:
+//   - groups: 标签组
+//
+// 返回: 分组后的信息列表数组
 func (i InfoList) GroupBy(groups TabGroups) []InfoList {
 
 	var res = make([]InfoList, len(groups))
@@ -100,8 +111,14 @@ func (i InfoList) GroupBy(groups TabGroups) []InfoList {
 	return res
 }
 
+// Callbacks 是回调节点列表
 type Callbacks []context.Node
 
+// AddCallback 添加回调节点
+// 参数:
+//   - node: 上下文节点
+//
+// 返回: 更新后的回调列表
 func (c Callbacks) AddCallback(node context.Node) Callbacks {
 	if node.Path != "" && node.Method != "" && len(node.Handlers) > 0 {
 		for _, item := range c {
@@ -120,12 +137,17 @@ func (c Callbacks) AddCallback(node context.Node) Callbacks {
 	return c
 }
 
+// FieldModelValue 是字段模型值类型
 type FieldModelValue []string
 
+// Value 获取字段模型的值
+// 返回: 第一个值
 func (r FieldModelValue) Value() string {
 	return r.First()
 }
 
+// First 获取第一个值
+// 返回: 第一个值，如果不存在则返回空字符串
 func (r FieldModelValue) First() string {
 	if len(r) > 0 {
 		return r[0]
@@ -133,60 +155,71 @@ func (r FieldModelValue) First() string {
 	return ""
 }
 
-// FieldDisplay is filter function of data.
+// FieldFilterFn 是数据过滤函数类型
 type FieldFilterFn func(value FieldModel) interface{}
 
-// PostFieldFilterFn is filter function of data.
+// PostFieldFilterFn 是数据过滤函数类型
 type PostFieldFilterFn func(value PostFieldModel) interface{}
 
-// Field is the table field.
+// Field 表示表字段
 type Field struct {
-	Head     string
-	Field    string
-	TypeName db.DatabaseType
+	Head     string          // 字段标题
+	Field    string          // 字段名
+	TypeName db.DatabaseType // 数据库类型
 
-	Joins Joins
+	Joins Joins // 关联配置
 
-	Width       int
-	Sortable    bool
-	EditAble    bool
-	Fixed       bool
-	Filterable  bool
-	Hide        bool
-	HideForList bool
+	Width       int  // 字段宽度
+	Sortable    bool // 是否可排序
+	EditAble    bool // 是否可编辑
+	Fixed       bool // 是否固定
+	Filterable  bool // 是否可筛选
+	Hide        bool // 是否隐藏
+	HideForList bool // 在列表中是否隐藏
 
-	EditType    table.Type
-	EditOptions FieldOptions
+	EditType    table.Type   // 编辑类型
+	EditOptions FieldOptions // 编辑选项
 
-	FilterFormFields []FilterFormField
+	FilterFormFields []FilterFormField // 筛选表单字段
 
-	IsEditParam   bool
-	IsDeleteParam bool
-	IsDetailParam bool
+	IsEditParam   bool // 是否为编辑参数
+	IsDeleteParam bool // 是否为删除参数
+	IsDetailParam bool // 是否为详情参数
 
-	FieldDisplay
+	FieldDisplay // 字段显示配置
 }
 
+// QueryFilterFn 是查询过滤函数类型
 type QueryFilterFn func(param parameter.Parameters, conn db.Connection) (ids []string, stopQuery bool)
+
+// UpdateParametersFn 是更新参数函数类型
 type UpdateParametersFn func(param *parameter.Parameters)
 
+// FilterFormField 是筛选表单字段结构体
 type FilterFormField struct {
-	Type        form.Type
-	Options     FieldOptions
-	OptionTable OptionTable
-	Width       int
-	HeadWidth   int
-	InputWidth  int
-	Style       template.HTMLAttr
-	Operator    FilterOperator
-	OptionExt   template.JS
-	Head        string
-	Placeholder string
-	HelpMsg     template.HTML
-	NoIcon      bool
-	ProcessFn   func(string) string
+	Type        form.Type           // 表单类型
+	Options     FieldOptions        // 选项列表
+	OptionTable OptionTable         // 选项表配置
+	Width       int                 // 字段宽度
+	HeadWidth   int                 // 标题宽度
+	InputWidth  int                 // 输入框宽度
+	Style       template.HTMLAttr   // 样式属性
+	Operator    FilterOperator      // 筛选操作符
+	OptionExt   template.JS         // 选项扩展配置
+	Head        string              // 标题
+	Placeholder string              // 占位符
+	HelpMsg     template.HTML       // 帮助信息
+	NoIcon      bool                // 是否不显示图标
+	ProcessFn   func(string) string // 处理函数
 }
 
+// GetFilterFormFields 获取筛选表单字段
+// 参数:
+//   - params: 参数对象
+//   - headField: 头字段名
+//   - sql: 可选的SQL对象
+//
+// 返回: 筛选表单字段列表
 func (f Field) GetFilterFormFields(params parameter.Parameters, headField string, sql ...*db.SQL) []FormField {
 
 	var (
@@ -284,20 +317,32 @@ func (f Field) GetFilterFormFields(params parameter.Parameters, headField string
 	return filterForm
 }
 
+// Exist 判断字段是否存在
+// 返回: 如果字段存在返回true，否则返回false
 func (f Field) Exist() bool {
 	return f.Field != ""
 }
 
+// FieldList 是字段列表类型
 type FieldList []Field
 
+// TableInfo 是表信息结构体
 type TableInfo struct {
-	Table      string
-	PrimaryKey string
-	Delimiter  string
-	Delimiter2 string
-	Driver     string
+	Table      string // 表名
+	PrimaryKey string // 主键
+	Delimiter  string // 左分隔符
+	Delimiter2 string // 右分隔符
+	Driver     string // 数据库驱动
 }
 
+// GetTheadAndFilterForm 获取表头和筛选表单
+// 参数:
+//   - info: 表信息
+//   - params: 参数对象
+//   - columns: 列名数组
+//   - sql: 可选的SQL函数
+//
+// 返回: 表头、字段、关联字段、关联SQL、筛选表单
 func (f FieldList) GetTheadAndFilterForm(info TableInfo, params parameter.Parameters, columns []string,
 	sql ...func() *db.SQL) (Thead, string, string, string, []string, []FormField) {
 	var (
@@ -445,7 +490,7 @@ func (f FieldList) GetFieldByFieldName(name string) Field {
 	return Field{}
 }
 
-// Join store join table info. For example:
+// Join 存储关联表信息。例如:
 //
 //	Join {
 //	    BaseTable:   "users",
@@ -454,15 +499,15 @@ func (f FieldList) GetFieldByFieldName(name string) Field {
 //	    JoinField:   "id",
 //	}
 //
-// It will generate the join table sql like:
+// 它将生成如下关联表SQL:
 //
 // ... left join roles on roles.id = users.role_id ...
 type Join struct {
-	Table      string
-	TableAlias string
-	Field      string
-	JoinField  string
-	BaseTable  string
+	Table      string // 关联表名
+	TableAlias string // 表别名
+	Field      string // 当前表字段
+	JoinField  string // 关联表字段
+	BaseTable  string // 基础表名
 }
 
 type Joins []Join
@@ -658,7 +703,7 @@ func (whs Wheres) Statement(wheres, delimiter, delimiter2 string, whereArgs []in
 			continue
 		}
 
-		// TODO: support like operation and join table
+		// TODO: 支持like操作和关联表
 		if modules.InArray(columns, whField) {
 
 			joinMark := ""
@@ -680,11 +725,14 @@ func (whs Wheres) Statement(wheres, delimiter, delimiter2 string, whereArgs []in
 	return wheres + pwheres, whereArgs
 }
 
+// WhereRaw 是原始WHERE条件结构体
 type WhereRaw struct {
-	Raw  string
-	Args []interface{}
+	Raw  string        // 原始SQL
+	Args []interface{} // 参数数组
 }
 
+// check 检查原始WHERE条件中是否包含and或or关键字
+// 返回: 关键字的位置
 func (wh WhereRaw) check() int {
 	index := 0
 	for i := 0; i < len(wh.Raw); i++ {
@@ -710,6 +758,12 @@ func (wh WhereRaw) check() int {
 	return index
 }
 
+// Statement 生成WHERE语句
+// 参数:
+//   - wheres: WHERE条件字符串
+//   - whereArgs: WHERE参数数组
+//
+// 返回: WHERE语句和参数数组
 func (wh WhereRaw) Statement(wheres string, whereArgs []interface{}) (string, []interface{}) {
 
 	if wh.Raw == "" {
@@ -732,8 +786,11 @@ func (wh WhereRaw) Statement(wheres string, whereArgs []interface{}) (string, []
 	return wheres, whereArgs
 }
 
+// Handler 是处理函数类型
 type Handler func(ctx *context.Context) (success bool, msg string, data interface{})
 
+// Wrap 包装处理函数为上下文处理函数
+// 返回: 上下文处理函数
 func (h Handler) Wrap() context.Handler {
 	return func(ctx *context.Context) {
 		defer func() {
@@ -742,7 +799,7 @@ func (h Handler) Wrap() context.Handler {
 				ctx.JSON(http.StatusInternalServerError, map[string]interface{}{
 					"code": 500,
 					"data": "",
-					"msg":  "error",
+					"msg":  "错误",
 				})
 			}
 		}()
@@ -761,19 +818,22 @@ func (h Handler) Wrap() context.Handler {
 	}
 }
 
+// ContentWrapper 是内容包装函数类型
 type ContentWrapper func(content template.HTML) template.HTML
 
+// Action 是操作接口
 type Action interface {
-	Js() template.JS
-	BtnAttribute() template.HTML
-	BtnClass() template.HTML
-	ExtContent(ctx *context.Context) template.HTML
-	FooterContent(ctx *context.Context) template.HTML
-	SetBtnId(btnId string)
-	SetBtnData(data interface{})
-	GetCallbacks() context.Node
+	Js() template.JS                                  // 获取JavaScript
+	BtnAttribute() template.HTML                      // 获取按钮属性
+	BtnClass() template.HTML                          // 获取按钮类名
+	ExtContent(ctx *context.Context) template.HTML    // 获取扩展内容
+	FooterContent(ctx *context.Context) template.HTML // 获取底部内容
+	SetBtnId(btnId string)                            // 设置按钮ID
+	SetBtnData(data interface{})                      // 设置按钮数据
+	GetCallbacks() context.Node                       // 获取回调
 }
 
+// NilAction 是空操作结构体
 type NilAction struct{}
 
 func (def *NilAction) SetBtnId(btnId string)                            {}
@@ -785,15 +845,25 @@ func (def *NilAction) ExtContent(ctx *context.Context) template.HTML    { return
 func (def *NilAction) FooterContent(ctx *context.Context) template.HTML { return "" }
 func (def *NilAction) GetCallbacks() context.Node                       { return context.Node{} }
 
+// Actions 是操作列表
 type Actions []Action
 
+// DefaultAction 是默认操作结构体
 type DefaultAction struct {
-	Attr   template.HTML
-	JS     template.JS
-	Ext    template.HTML
-	Footer template.HTML
+	Attr   template.HTML // 属性
+	JS     template.JS   // JavaScript
+	Ext    template.HTML // 扩展内容
+	Footer template.HTML // 底部内容
 }
 
+// NewDefaultAction 创建默认操作
+// 参数:
+//   - attr: 属性HTML
+//   - ext: 扩展内容HTML
+//   - footer: 底部内容HTML
+//   - js: JavaScript代码
+//
+// 返回: 默认操作对象
 func NewDefaultAction(attr, ext, footer template.HTML, js template.JS) *DefaultAction {
 	return &DefaultAction{Attr: attr, Ext: ext, Footer: footer, JS: js}
 }
@@ -809,10 +879,18 @@ func (def *DefaultAction) GetCallbacks() context.Node                       { re
 
 var _ Action = (*DefaultAction)(nil)
 
+// DefaultPageSizeList 是默认页面大小列表
 var DefaultPageSizeList = []int{10, 20, 30, 50, 100}
 
+// DefaultPageSize 是默认页面大小
 const DefaultPageSize = 10
 
+// NewInfoPanel 创建新的信息面板
+// 参数:
+//   - ctx: 上下文对象
+//   - pk: 主键
+//
+// 返回: 初始化后的信息面板
 func NewInfoPanel(ctx *context.Context, pk string) *InfoPanel {
 	return &InfoPanel{
 		Ctx:                     ctx,
@@ -833,22 +911,51 @@ func NewInfoPanel(ctx *context.Context, pk string) *InfoPanel {
 	}
 }
 
+// Where 添加WHERE条件
+// 参数:
+//   - field: 字段名
+//   - operator: 操作符
+//   - arg: 参数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) Where(field string, operator string, arg interface{}) *InfoPanel {
 	i.Wheres = append(i.Wheres, Where{Field: field, Operator: operator, Arg: arg, Join: "and"})
 	return i
 }
 
+// WhereOr 添加OR条件的WHERE条件
+// 参数:
+//   - field: 字段名
+//   - operator: 操作符
+//   - arg: 参数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) WhereOr(field string, operator string, arg interface{}) *InfoPanel {
 	i.Wheres = append(i.Wheres, Where{Field: field, Operator: operator, Arg: arg, Join: "or"})
 	return i
 }
 
+// WhereRaw 添加原始WHERE条件
+// 参数:
+//   - raw: 原始SQL语句
+//   - arg: 参数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) WhereRaw(raw string, arg ...interface{}) *InfoPanel {
 	i.WhereRaws.Raw = raw
 	i.WhereRaws.Args = arg
 	return i
 }
 
+// AddSelectBox 添加选择框
+// 参数:
+//   - ctx: 上下文对象
+//   - placeholder: 占位符
+//   - options: 选项列表
+//   - action: 操作对象
+//   - width: 可选的宽度
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddSelectBox(ctx *context.Context, placeholder string, options FieldOptions, action Action, width ...int) *InfoPanel {
 	options = append(FieldOptions{{Value: "", Text: language.Get("All")}}, options...)
 	action.SetBtnData(options)
@@ -859,21 +966,41 @@ func (i *InfoPanel) AddSelectBox(ctx *context.Context, placeholder string, optio
 	return i
 }
 
+// ExportValue 设置导出类型为值
+// 返回: 更新后的信息面板
 func (i *InfoPanel) ExportValue() *InfoPanel {
 	i.ExportType = 1
 	return i
 }
 
+// IsExportValue 判断是否导出值
+// 返回: 如果是导出值返回true，否则返回false
 func (i *InfoPanel) IsExportValue() bool {
 	return i.ExportType == 1
 }
 
+// AddButtonRaw 添加原始按钮
+// 参数:
+//   - ctx: 上下文对象
+//   - btn: 按钮对象
+//   - action: 操作对象
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddButtonRaw(ctx *context.Context, btn Button, action Action) *InfoPanel {
 	i.Buttons = append(i.Buttons, btn)
 	i.addFooterHTML(action.FooterContent(ctx)).addCallback(action.GetCallbacks())
 	return i
 }
 
+// AddButton 添加按钮
+// 参数:
+//   - ctx: 上下文对象
+//   - title: 按钮标题
+//   - icon: 图标
+//   - action: 操作对象
+//   - color: 可选的颜色
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddButton(ctx *context.Context, title template.HTML, icon string, action Action, color ...template.HTML) *InfoPanel {
 	i.addButton(GetDefaultButtonGroup(title, icon, action, color...)).
 		addFooterHTML(action.FooterContent(ctx)).
@@ -881,6 +1008,14 @@ func (i *InfoPanel) AddButton(ctx *context.Context, title template.HTML, icon st
 	return i
 }
 
+// AddActionIconButton 添加操作图标按钮
+// 参数:
+//   - ctx: 上下文对象
+//   - icon: 图标
+//   - action: 操作对象
+//   - ids: 可选的ID列表
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddActionIconButton(ctx *context.Context, icon string, action Action, ids ...string) *InfoPanel {
 	i.addActionButton(GetActionIconButton(icon, action, ids...)).
 		addFooterHTML(action.FooterContent(ctx)).
@@ -889,6 +1024,14 @@ func (i *InfoPanel) AddActionIconButton(ctx *context.Context, icon string, actio
 	return i
 }
 
+// AddActionButtonFront 在前面添加操作按钮
+// 参数:
+//   - ctx: 上下文对象
+//   - title: 按钮标题
+//   - action: 操作对象
+//   - ids: 可选的ID列表
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddActionButtonFront(ctx *context.Context, title template.HTML, action Action, ids ...string) *InfoPanel {
 	i.SetActionButtonFold()
 	i.ActionButtons = append([]Button{GetActionButton(title, action, ids...)}, i.ActionButtons...)
@@ -897,6 +1040,14 @@ func (i *InfoPanel) AddActionButtonFront(ctx *context.Context, title template.HT
 	return i
 }
 
+// AddActionButton 添加操作按钮
+// 参数:
+//   - ctx: 上下文对象
+//   - title: 按钮标题
+//   - action: 操作对象
+//   - ids: 可选的ID列表
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddActionButton(ctx *context.Context, title template.HTML, action Action, ids ...string) *InfoPanel {
 	i.SetActionButtonFold()
 	i.addActionButton(GetActionButton(title, action, ids...)).
@@ -906,106 +1057,190 @@ func (i *InfoPanel) AddActionButton(ctx *context.Context, title template.HTML, a
 	return i
 }
 
+// SetActionButtonFold 设置操作按钮折叠
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetActionButtonFold() *InfoPanel {
 	i.ActionButtonFold = true
 	return i
 }
 
+// AddLimitFilter 添加长度限制过滤器
+// 参数:
+//   - limit: 限制长度
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddLimitFilter(limit int) *InfoPanel {
 	i.processChains = addLimit(limit, i.processChains)
 	return i
 }
 
+// AddTrimSpaceFilter 添加去空格过滤器
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddTrimSpaceFilter() *InfoPanel {
 	i.processChains = addTrimSpace(i.processChains)
 	return i
 }
 
+// AddSubstrFilter 添加子字符串过滤器
+// 参数:
+//   - start: 起始位置
+//   - end: 结束位置
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddSubstrFilter(start int, end int) *InfoPanel {
 	i.processChains = addSubstr(start, end, i.processChains)
 	return i
 }
 
+// AddToTitleFilter 添加标题过滤器
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddToTitleFilter() *InfoPanel {
 	i.processChains = addToTitle(i.processChains)
 	return i
 }
 
+// AddToUpperFilter 添加大写过滤器
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddToUpperFilter() *InfoPanel {
 	i.processChains = addToUpper(i.processChains)
 	return i
 }
 
+// AddToLowerFilter 添加小写过滤器
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddToLowerFilter() *InfoPanel {
 	i.processChains = addToLower(i.processChains)
 	return i
 }
 
+// AddXssFilter 添加XSS过滤器
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddXssFilter() *InfoPanel {
 	i.processChains = addXssFilter(i.processChains)
 	return i
 }
 
+// AddXssJsFilter 添加XSS JS过滤器
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddXssJsFilter() *InfoPanel {
 	i.processChains = addXssJsFilter(i.processChains)
 	return i
 }
 
+// SetExportProcessFn 设置导出处理函数
+// 参数:
+//   - fn: 导出处理函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetExportProcessFn(fn ExportProcessFn) *InfoPanel {
 	i.ExportProcessFn = fn
 	return i
 }
 
+// SetDeleteHook 设置删除钩子
+// 参数:
+//   - fn: 删除函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetDeleteHook(fn DeleteFn) *InfoPanel {
 	i.DeleteHook = fn
 	return i
 }
 
+// SetDeleteHookWithRes 设置带结果的删除钩子
+// 参数:
+//   - fn: 带结果的删除函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetDeleteHookWithRes(fn DeleteFnWithRes) *InfoPanel {
 	i.DeleteHookWithRes = fn
 	return i
 }
 
+// SetQueryFilterFn 设置查询过滤函数
+// 参数:
+//   - fn: 查询过滤函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetQueryFilterFn(fn QueryFilterFn) *InfoPanel {
 	i.QueryFilterFn = fn
 	return i
 }
 
+// AddUpdateParametersFn 添加更新参数函数
+// 参数:
+//   - fn: 更新参数函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddUpdateParametersFn(fn UpdateParametersFn) *InfoPanel {
 	i.UpdateParametersFns = append(i.UpdateParametersFns, fn)
 	return i
 }
 
+// SetWrapper 设置内容包装器
+// 参数:
+//   - wrapper: 内容包装函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetWrapper(wrapper ContentWrapper) *InfoPanel {
 	i.Wrapper = wrapper
 	return i
 }
 
+// SetPreDeleteFn 设置删除前函数
+// 参数:
+//   - fn: 删除函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetPreDeleteFn(fn DeleteFn) *InfoPanel {
 	i.PreDeleteFn = fn
 	return i
 }
 
+// SetDeleteFn 设置删除函数
+// 参数:
+//   - fn: 删除函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetDeleteFn(fn DeleteFn) *InfoPanel {
 	i.DeleteFn = fn
 	return i
 }
 
+// SetGetDataFn 设置获取数据函数
+// 参数:
+//   - fn: 获取数据函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetGetDataFn(fn GetDataFn) *InfoPanel {
 	i.GetDataFn = fn
 	return i
 }
 
+// SetPrimaryKey 设置主键
+// 参数:
+//   - name: 主键名
+//   - typ: 数据库类型
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetPrimaryKey(name string, typ db.DatabaseType) *InfoPanel {
 	i.primaryKey = primaryKey{Name: name, Type: typ}
 	return i
 }
 
+// SetTableFixed 设置表格布局为固定
+// 返回: 更新后的信息面板
 func (i *InfoPanel) SetTableFixed() *InfoPanel {
 	i.TableLayout = "fixed"
 	return i
 }
 
+// AddColumn 添加列
+// 参数:
+//   - head: 列标题
+//   - fun: 字段过滤函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddColumn(head string, fun FieldFilterFn) *InfoPanel {
 	i.FieldList = append(i.FieldList, Field{
 		Head:     head,
@@ -1023,6 +1258,13 @@ func (i *InfoPanel) AddColumn(head string, fun FieldFilterFn) *InfoPanel {
 	return i
 }
 
+// AddColumnButtons 添加按钮列
+// 参数:
+//   - ctx: 上下文对象
+//   - head: 列标题
+//   - buttons: 按钮列表
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddColumnButtons(ctx *context.Context, head string, buttons ...Button) *InfoPanel {
 	var content, js template.HTML
 	for _, btn := range buttons {
@@ -1058,14 +1300,37 @@ func (i *InfoPanel) AddColumnButtons(ctx *context.Context, head string, buttons 
 	return i
 }
 
+// AddFieldTr 添加带翻译的字段
+// 参数:
+//   - ctx: 上下文对象
+//   - head: 字段标题
+//   - field: 字段名
+//   - typeName: 数据库类型
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddFieldTr(ctx *context.Context, head, field string, typeName db.DatabaseType) *InfoPanel {
 	return i.AddFieldWithTranslation(ctx, head, field, typeName)
 }
 
+// AddFieldWithTranslation 添加带翻译的字段
+// 参数:
+//   - ctx: 上下文对象
+//   - head: 字段标题
+//   - field: 字段名
+//   - typeName: 数据库类型
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddFieldWithTranslation(ctx *context.Context, head, field string, typeName db.DatabaseType) *InfoPanel {
 	return i.AddField(language.GetWithLang(head, ctx.Lang()), field, typeName)
 }
 
+// AddField 添加字段
+// 参数:
+//   - head: 字段标题
+//   - field: 字段名
+//   - typeName: 数据库类型
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddField(head, field string, typeName db.DatabaseType) *InfoPanel {
 	i.FieldList = append(i.FieldList, Field{
 		Head:     head,
@@ -1086,93 +1351,172 @@ func (i *InfoPanel) AddField(head, field string, typeName db.DatabaseType) *Info
 	return i
 }
 
+// AddFilter 添加筛选字段
+// 参数:
+//   - head: 字段标题
+//   - field: 字段名
+//   - typeName: 数据库类型
+//   - fn: 更新参数函数
+//   - filterType: 可选的筛选类型
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) AddFilter(head, field string, typeName db.DatabaseType, fn UpdateParametersFn, filterType ...FilterType) *InfoPanel {
 	return i.AddField(head, field, typeName).FieldHide().FieldFilterable(filterType...).AddUpdateParametersFn(fn)
 }
 
-// Field attribute setting functions
+// 字段属性设置函数
 // ====================================================
 
+// FieldDisplay 设置字段显示函数
+// 参数:
+//   - filter: 字段过滤函数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldDisplay(filter FieldFilterFn) *InfoPanel {
 	i.FieldList[i.curFieldListIndex].Display = filter
 	return i
 }
 
+// FieldLabelParam 是字段标签参数结构体
 type FieldLabelParam struct {
-	Color template.HTML
-	Type  string
+	Color template.HTML // 颜色
+	Type  string        // 类型
 }
 
+// FieldLabel 设置字段标签
+// 参数:
+//   - args: 标签参数
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldLabel(args ...FieldLabelParam) *InfoPanel {
 	i.addDisplayChains(displayFnGens["label"].Get(i.Ctx, args))
 	return i
 }
 
+// FieldImage 设置字段为图片显示
+// 参数:
+//   - width: 宽度
+//   - height: 高度
+//   - prefix: 可选的前缀
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldImage(width, height string, prefix ...string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["image"].Get(i.Ctx, width, height, prefix))
 	return i
 }
 
+// FieldBool 设置字段为布尔值显示
+// 参数:
+//   - flags: 标志列表
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldBool(flags ...string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["bool"].Get(i.Ctx, flags))
 	return i
 }
 
+// FieldLink 设置字段为链接显示
+// 参数:
+//   - src: 链接地址
+//   - openInNewTab: 是否在新标签页打开
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldLink(src string, openInNewTab ...bool) *InfoPanel {
 	i.addDisplayChains(displayFnGens["link"].Get(i.Ctx, src, openInNewTab))
 	return i
 }
 
+// FieldFileSize 设置字段为文件大小显示
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldFileSize() *InfoPanel {
 	i.addDisplayChains(displayFnGens["filesize"].Get(i.Ctx))
 	return i
 }
 
+// FieldDate 设置字段为日期显示
+// 参数:
+//   - format: 日期格式
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldDate(format string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["date"].Get(i.Ctx, format))
 	return i
 }
 
+// FieldIcon 设置字段为图标显示
+// 参数:
+//   - icons: 图标映射
+//   - defaultIcon: 默认图标
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldIcon(icons map[string]string, defaultIcon string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["link"].Get(i.Ctx, icons, defaultIcon))
 	return i
 }
 
+// FieldDotColor 是字段点颜色类型
 type FieldDotColor string
 
 const (
-	FieldDotColorDanger  FieldDotColor = "danger"
-	FieldDotColorInfo    FieldDotColor = "info"
-	FieldDotColorPrimary FieldDotColor = "primary"
-	FieldDotColorSuccess FieldDotColor = "success"
+	FieldDotColorDanger  FieldDotColor = "danger"  // 危险颜色
+	FieldDotColorInfo    FieldDotColor = "info"    // 信息颜色
+	FieldDotColorPrimary FieldDotColor = "primary" // 主要颜色
+	FieldDotColorSuccess FieldDotColor = "success" // 成功颜色
 )
 
+// FieldDot 设置字段为点显示
+// 参数:
+//   - icons: 图标映射
+//   - defaultDot: 默认点颜色
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldDot(icons map[string]FieldDotColor, defaultDot FieldDotColor) *InfoPanel {
 	i.addDisplayChains(displayFnGens["dot"].Get(i.Ctx, icons, defaultDot))
 	return i
 }
 
+// FieldProgressBarData 是进度条数据结构体
 type FieldProgressBarData struct {
-	Style string
-	Size  string
-	Max   int
+	Style string // 样式
+	Size  string // 大小
+	Max   int    // 最大值
 }
 
+// FieldProgressBar 设置字段为进度条显示
+// 参数:
+//   - data: 进度条数据
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldProgressBar(data ...FieldProgressBarData) *InfoPanel {
 	i.addDisplayChains(displayFnGens["progressbar"].Get(i.Ctx, data))
 	return i
 }
 
+// FieldLoading 设置字段为加载中显示
+// 参数:
+//   - data: 数据列表
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldLoading(data []string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["loading"].Get(i.Ctx, data))
 	return i
 }
 
+// FieldDownLoadable 设置字段为可下载显示
+// 参数:
+//   - prefix: 可选的前缀
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldDownLoadable(prefix ...string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["downloadable"].Get(i.Ctx, prefix))
 	return i
 }
 
+// FieldCopyable 设置字段为可复制显示
+// 参数:
+//   - prefix: 可选的前缀
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldCopyable(prefix ...string) *InfoPanel {
 	i.addDisplayChains(displayFnGens["copyable"].Get(i.Ctx, prefix))
 	if _, ok := i.DisplayGeneratorRecords["copyable"]; !ok {
@@ -1182,13 +1526,22 @@ func (i *InfoPanel) FieldCopyable(prefix ...string) *InfoPanel {
 	return i
 }
 
+// FieldGetImgArrFn 是获取图片数组函数类型
 type FieldGetImgArrFn func(value string) []string
 
+// FieldCarousel 设置字段为轮播图显示
+// 参数:
+//   - fn: 获取图片数组函数
+//   - size: 可选的大小
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldCarousel(fn FieldGetImgArrFn, size ...int) *InfoPanel {
 	i.addDisplayChains(displayFnGens["carousel"].Get(i.Ctx, fn, size))
 	return i
 }
 
+// FieldQrcode 设置字段为二维码显示
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldQrcode() *InfoPanel {
 	i.addDisplayChains(displayFnGens["qrcode"].Get(i.Ctx))
 	if _, ok := i.DisplayGeneratorRecords["qrcode"]; !ok {
@@ -1198,11 +1551,18 @@ func (i *InfoPanel) FieldQrcode() *InfoPanel {
 	return i
 }
 
+// FieldWidth 设置字段宽度
+// 参数:
+//   - width: 宽度
+//
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldWidth(width int) *InfoPanel {
 	i.FieldList[i.curFieldListIndex].Width = width
 	return i
 }
 
+// FieldSortable 设置字段可排序
+// 返回: 更新后的信息面板
 func (i *InfoPanel) FieldSortable() *InfoPanel {
 	i.FieldList[i.curFieldListIndex].Sortable = true
 	return i

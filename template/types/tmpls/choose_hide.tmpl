@@ -1,31 +1,44 @@
 {{define "choose_hide"}}
     <script>
+        // 监听Select2选择事件
         $("select.{{.Field}}").on("select2:select", function (e) {
+            // 检查选中的值是否在指定值列表中
             if ({{.Value}}.indexOf(e.params.data.text) !== -1 || {{.Value}}.indexOf(e.params.data.id) !== -1) {
+                // 遍历需要隐藏的字段
                 {{range $key, $fields := .ChooseFields}}
 
+                // 隐藏指定字段的父元素
                 $("label[for='{{$fields}}']").parent().hide();
 
                 {{end}}
             } else {
+                // 遍历需要显示的字段
                 {{range $key, $fields := .ChooseFields}}
 
+                // 显示指定字段的父元素
                 $("label[for='{{$fields}}']").parent().show();
 
                 {{end}}
             }
         });
+        // 页面加载完成后执行初始化
         $(function () {
+            // 获取当前字段的Select2数据
             let {{.Field}}data = $(".{{.Field}}").select2("data");
             let {{.Field}}text = "";
             let {{.Field}}id = "";
+            // 如果存在选择数据
             if ({{.Field}}data.length > 0) {
+                // 获取选中的文本和ID
                 {{.Field}}text = {{.Field}}data[0].text;
                 {{.Field}}id = {{.Field}}data[0].id;
             }
+            // 检查初始值是否在指定值列表中
             if ({{.Value}}.indexOf({{$.Field}}text) !== -1 || {{.Value}}.indexOf({{$.Field}}id) !== -1) {
+                // 遍历需要隐藏的字段
                 {{range $key, $fields := .ChooseFields}}
 
+                // 隐藏指定字段的父元素
                 $("label[for='{{$fields}}']").parent().hide();
 
                 {{end}}

@@ -29,18 +29,18 @@ import (
 	textLang "golang.org/x/text/language"
 )
 
-// Template is the interface which contains methods of ui components.
-// It will be used in the plugins for custom the ui.
+// Template 是包含UI组件方法的接口
+// 它将在插件中用于自定义UI
 type Template interface {
 	Name() string
 
-	// Components
+	// 组件
 
-	// layout
+	// 布局
 	Col() types.ColAttribute
 	Row() types.RowAttribute
 
-	// form and table
+	// 表单和表格
 	Form() types.FormAttribute
 	Table() types.TableAttribute
 	DataTable() types.DataTableAttribute
@@ -60,7 +60,7 @@ type Template interface {
 
 	Button() types.ButtonAttribute
 
-	// Builder methods
+	// 构建器方法
 	GetTmplList() map[string]string
 	GetAssetList() []string
 	GetAssetImportHTML(exceptComponents ...string) template.HTML
@@ -75,15 +75,21 @@ type Template interface {
 	Get403HTML() template.HTML
 }
 
+// PageType 页面类型枚举
 type PageType uint8
 
 const (
-	NormalPage PageType = iota
-	Missing404Page
-	Error500Page
-	NoPermission403Page
+	NormalPage          PageType = iota // 正常页面
+	Missing404Page                      // 404页面
+	Error500Page                        // 500错误页面
+	NoPermission403Page                 // 403无权限页面
 )
 
+// GetPageTypeFromPageError 根据页面错误获取页面类型
+// 参数:
+//   - err: 页面错误对象
+//
+// 返回: 对应的页面类型
 func GetPageTypeFromPageError(err errors2.PageError) PageType {
 	if err == nil {
 		return NormalPage
@@ -96,42 +102,63 @@ func GetPageTypeFromPageError(err errors2.PageError) PageType {
 	}
 }
 
+// 组件类型常量定义
 const (
-	CompCol       = "col"
-	CompRow       = "row"
-	CompForm      = "form"
-	CompTable     = "table"
-	CompDataTable = "datatable"
-	CompTree      = "tree"
-	CompTreeView  = "treeview"
-	CompTabs      = "tabs"
-	CompAlert     = "alert"
-	CompLink      = "link"
-	CompPaginator = "paginator"
-	CompPopup     = "popup"
-	CompBox       = "box"
-	CompLabel     = "label"
-	CompImage     = "image"
-	CompButton    = "button"
+	CompCol       = "col"       // 列组件
+	CompRow       = "row"       // 行组件
+	CompForm      = "form"      // 表单组件
+	CompTable     = "table"     // 表格组件
+	CompDataTable = "datatable" // 数据表格组件
+	CompTree      = "tree"      // 树组件
+	CompTreeView  = "treeview"  // 树视图组件
+	CompTabs      = "tabs"      // 标签页组件
+	CompAlert     = "alert"     // 警告组件
+	CompLink      = "link"      // 链接组件
+	CompPaginator = "paginator" // 分页组件
+	CompPopup     = "popup"     // 弹窗组件
+	CompBox       = "box"       // 盒子组件
+	CompLabel     = "label"     // 标签组件
+	CompImage     = "image"     // 图片组件
+	CompButton    = "button"    // 按钮组件
 )
 
+// HTML 将字符串转换为HTML类型
+// 参数:
+//   - s: HTML字符串
+//
+// 返回: HTML类型
 func HTML(s string) template.HTML {
 	return template.HTML(s)
 }
 
+// CSS 将字符串转换为CSS类型
+// 参数:
+//   - s: CSS字符串
+//
+// 返回: CSS类型
 func CSS(s string) template.CSS {
 	return template.CSS(s)
 }
 
+// JS 将字符串转换为JS类型
+// 参数:
+//   - s: JavaScript字符串
+//
+// 返回: JS类型
 func JS(s string) template.JS {
 	return template.JS(s)
 }
 
-// The templateMap contains templates registered.
+// templateMap 包含已注册的模板
 var templateMap = make(map[string]Template)
 
-// Get the template interface by theme name. If the
-// name is not found, it panics.
+// Get 根据主题名称获取模板接口
+// 如果找不到名称，会触发panic
+// 参数:
+//   - ctx: 上下文对象
+//   - theme: 主题名称
+//
+// 返回: 模板接口
 func Get(ctx *context.Context, theme string) Template {
 	if ctx != nil {
 		queryTheme := ctx.Theme()
@@ -147,8 +174,12 @@ func Get(ctx *context.Context, theme string) Template {
 	panic("wrong theme name")
 }
 
-// Default get the default template with the theme name set with the global config.
-// If the name is not found, it panics.
+// Default 获取使用全局配置设置的主题名称的默认模板
+// 如果找不到名称，会触发panic
+// 参数:
+//   - ctx: 可选的上下文对象
+//
+// 返回: 模板接口
 func Default(ctx ...*context.Context) Template {
 	if len(ctx) > 0 && ctx[0] != nil {
 		queryTheme := ctx[0].Theme()
@@ -169,9 +200,11 @@ var (
 	compMu     sync.Mutex
 )
 
-// Add makes a template available by the provided theme name.
-// If Add is called twice with the same name or if template is nil,
-// it panics.
+// Add 通过提供的主题名称使模板可用
+// 如果使用相同的名称调用两次Add或模板为nil，会触发panic
+// 参数:
+//   - name: 主题名称
+//   - temp: 模板接口
 func Add(name string, temp Template) {
 	templateMu.Lock()
 	defer templateMu.Unlock()
@@ -184,24 +217,35 @@ func Add(name string, temp Template) {
 	templateMap[name] = temp
 }
 
-// CheckRequirements check the theme and GoAdmin interdependence limit.
-// The first return parameter means that whether GoAdmin version meets the requirement of the theme used or not.
-// The second return parameter means that whether the version of theme used meets the requirement of GoAdmin or not.
+// CheckRequirements 检查主题和GoAdmin的相互依赖限制
+// 第一个返回参数表示GoAdmin版本是否满足所使用主题的要求
+// 第二个返回参数表示所使用主题的版本是否满足GoAdmin的要求
+// 返回:
+//   - bool: GoAdmin版本是否满足主题要求
+//   - bool: 主题版本是否满足GoAdmin要求
 func CheckRequirements() (bool, bool) {
 	if !CheckThemeRequirements() {
 		return false, true
 	}
-	// The theme which is not in the default official themes will be ignored.
+	// 不在默认官方主题中的主题将被忽略
 	if !utils.InArray(DefaultThemeNames, Default().Name()) {
 		return true, true
 	}
 	return true, VersionCompare(Default().GetVersion(), system.RequireThemeVersion()[Default().Name()])
 }
 
+// CheckThemeRequirements 检查主题要求
+// 返回: GoAdmin版本是否满足主题要求
 func CheckThemeRequirements() bool {
 	return VersionCompare(system.Version(), Default().GetRequirements())
 }
 
+// VersionCompare 比较版本号
+// 参数:
+//   - toCompare: 要比较的版本号
+//   - versions: 版本号列表
+//
+// 返回: 是否匹配或满足版本要求
 func VersionCompare(toCompare string, versions []string) bool {
 	for _, v := range versions {
 		if v == toCompare || utils.CompareVersion(v, toCompare) {
@@ -211,6 +255,15 @@ func VersionCompare(toCompare string, versions []string) bool {
 	return false
 }
 
+// GetPageContentFromPageType 根据页面类型获取页面内容
+// 参数:
+//   - ctx: 上下文对象
+//   - title: 页面标题
+//   - desc: 页面描述
+//   - msg: 消息内容
+//   - pt: 页面类型
+//
+// 返回: 标题HTML、描述HTML、内容HTML
 func GetPageContentFromPageType(ctx *context.Context, title, desc, msg string, pt PageType) (template.HTML, template.HTML, template.HTML) {
 	if c.GetDebug() {
 		return template.HTML(title), template.HTML(desc), Default(ctx).Alert().SetTitle(errors2.MsgWithIcon).Warning(msg)
@@ -237,8 +290,11 @@ func GetPageContentFromPageType(ctx *context.Context, title, desc, msg string, p
 	}
 }
 
+// DefaultThemeNames 默认主题名称列表
 var DefaultThemeNames = []string{"sword", "adminlte"}
 
+// Themes 获取所有已注册的主题名称
+// 返回: 主题名称列表
 func Themes() []string {
 	names := make([]string, len(templateMap))
 	i := 0
@@ -249,6 +305,10 @@ func Themes() []string {
 	return names
 }
 
+// AddFromPlugin 从插件添加模板
+// 参数:
+//   - name: 模板名称
+//   - mod: 插件模块路径
 func AddFromPlugin(name string, mod string) {
 
 	plug, err := plugin.Open(mod)
@@ -273,25 +333,25 @@ func AddFromPlugin(name string, mod string) {
 	Add(name, temp)
 }
 
-// Component is the interface which stand for a ui component.
+// Component 是表示UI组件的接口
 type Component interface {
-	// GetTemplate return a *template.Template and a given key.
+	// GetTemplate 返回一个 *template.Template 和一个给定的键
 	GetTemplate() (*template.Template, string)
 
-	// GetAssetList return the assets url suffix used in the component.
-	// example:
+	// GetAssetList 返回组件中使用的资源URL后缀
+	// 示例:
 	//
 	// {{.UrlPrefix}}/assets/login/css/bootstrap.min.css => login/css/bootstrap.min.css
 	//
-	// See:
+	// 参见:
 	// https://github.com/purpose168/GoAdmin/blob/master/template/login/theme1.tmpl#L32
 	// https://github.com/purpose168/GoAdmin/blob/master/template/login/list.go
 	GetAssetList() []string
 
-	// GetAsset return the asset content according to the corresponding url suffix.
-	// Asset content is recommended to use the tool go-bindata to generate.
+	// GetAsset 根据相应的URL后缀返回资源内容
+	// 建议使用go-bindata工具生成资源内容
 	//
-	// See: http://github.com/jteeuwen/go-bindata
+	// 参见: http://github.com/jteeuwen/go-bindata
 	GetAsset(string) ([]byte, error)
 
 	GetContent() template.HTML
@@ -305,12 +365,17 @@ type Component interface {
 	GetCallbacks() types.Callbacks
 }
 
+// compMap 组件映射表
 var compMap = map[string]Component{
 	"login": login.GetLoginComponent(),
 }
 
-// GetComp gets the component by registered name. If the
-// name is not found, it panics.
+// GetComp 根据注册名称获取组件
+// 如果找不到名称，会触发panic
+// 参数:
+//   - name: 组件名称
+//
+// 返回: 组件接口
 func GetComp(name string) Component {
 	if comp, ok := compMap[name]; ok {
 		return comp
@@ -318,6 +383,8 @@ func GetComp(name string) Component {
 	panic("wrong component name")
 }
 
+// GetComponentAsset 获取所有组件的资源列表
+// 返回: 资源URL后缀列表
 func GetComponentAsset() []string {
 	assets := make([]string, 0)
 	for _, comp := range compMap {
@@ -326,6 +393,8 @@ func GetComponentAsset() []string {
 	return assets
 }
 
+// GetComponentAssetWithinPage 获取页面内组件的资源列表（不包括页面组件）
+// 返回: 资源URL后缀列表
 func GetComponentAssetWithinPage() []string {
 	assets := make([]string, 0)
 	for _, comp := range compMap {
@@ -336,6 +405,11 @@ func GetComponentAssetWithinPage() []string {
 	return assets
 }
 
+// GetComponentAssetImportHTML 获取组件资源导入HTML
+// 参数:
+//   - ctx: 上下文对象
+//
+// 返回: 资源导入HTML
 func GetComponentAssetImportHTML(ctx *context.Context) (res template.HTML) {
 	res = Default(ctx).GetAssetImportHTML(c.GetExcludeThemeComponents()...)
 	assets := GetComponentAssetWithinPage()
@@ -345,6 +419,11 @@ func GetComponentAssetImportHTML(ctx *context.Context) (res template.HTML) {
 	return
 }
 
+// getHTMLFromAssetUrl 根据资源URL获取对应的HTML标签
+// 参数:
+//   - s: 资源URL后缀
+//
+// 返回: HTML标签
 func getHTMLFromAssetUrl(s string) template.HTML {
 	switch path.Ext(s) {
 	case ".css":
@@ -356,6 +435,11 @@ func getHTMLFromAssetUrl(s string) template.HTML {
 	}
 }
 
+// GetAsset 根据路径获取资源内容
+// 参数:
+//   - path: 资源路径
+//
+// 返回: 资源内容和错误
 func GetAsset(path string) ([]byte, error) {
 	for _, comp := range compMap {
 		res, err := comp.GetAsset(path)
@@ -366,9 +450,10 @@ func GetAsset(path string) ([]byte, error) {
 	return nil, errors.New(path + " not found")
 }
 
-// AddComp makes a component available by the provided name.
-// If Add is called twice with the same name or if component is nil,
-// it panics.
+// AddComp 通过提供的名称使组件可用
+// 如果使用相同的名称调用两次Add或组件为nil，会触发panic
+// 参数:
+//   - comp: 组件接口
 func AddComp(comp Component) {
 	compMu.Lock()
 	defer compMu.Unlock()
@@ -381,16 +466,20 @@ func AddComp(comp Component) {
 	compMap[comp.GetName()] = comp
 }
 
-// AddLoginComp add the specified login component.
+// AddLoginComp 添加指定的登录组件
+// 参数:
+//   - comp: 组件接口
 func AddLoginComp(comp Component) {
 	compMu.Lock()
 	defer compMu.Unlock()
 	compMap["login"] = comp
 }
 
-// SetComp makes a component available by the provided name.
-// If the value corresponding to the key is empty or if component is nil,
-// it panics.
+// SetComp 通过提供的名称使组件可用
+// 如果键对应的值为空或组件为nil，会触发panic
+// 参数:
+//   - name: 组件名称
+//   - comp: 组件接口
 func SetComp(name string, comp Component) {
 	compMu.Lock()
 	defer compMu.Unlock()
@@ -402,21 +491,27 @@ func SetComp(name string, comp Component) {
 	}
 }
 
+// ExecuteParam 执行参数结构体
 type ExecuteParam struct {
-	User       models.UserModel
-	Tmpl       *template.Template
-	TmplName   string
-	IsPjax     bool
-	Panel      types.Panel
-	Logo       template.HTML
-	Config     *c.Config
-	Menu       *menu.Menu
-	Animation  bool
-	Buttons    types.Buttons
-	NoCompress bool
-	Iframe     bool
+	User       models.UserModel   // 用户模型
+	Tmpl       *template.Template // 模板对象
+	TmplName   string             // 模板名称
+	IsPjax     bool               // 是否为PJAX请求
+	Panel      types.Panel        // 面板
+	Logo       template.HTML      // Logo HTML
+	Config     *c.Config          // 配置对象
+	Menu       *menu.Menu         // 菜单
+	Animation  bool               // 是否启用动画
+	Buttons    types.Buttons      // 按钮
+	NoCompress bool               // 是否不压缩
+	Iframe     bool               // 是否在iframe中
 }
 
+// updateNavAndLogoJS 更新导航和Logo的JavaScript
+// 参数:
+//   - logo: Logo HTML
+//
+// 返回: JavaScript代码
 func updateNavAndLogoJS(logo template.HTML) template.JS {
 	if logo == template.HTML("") {
 		return ""
@@ -426,6 +521,11 @@ func updateNavAndLogoJS(logo template.HTML) template.JS {
 });`
 }
 
+// updateNavJS 更新导航的JavaScript
+// 参数:
+//   - isPjax: 是否为PJAX请求
+//
+// 返回: JavaScript代码
 func updateNavJS(isPjax bool) template.JS {
 	if !isPjax {
 		return ""
@@ -439,15 +539,21 @@ func updateNavJS(isPjax bool) template.JS {
 });`
 }
 
+// ExecuteOptions 执行选项结构体
 type ExecuteOptions struct {
-	Animation         bool
-	NoCompress        bool
-	HideSideBar       bool
-	HideHeader        bool
-	UpdateMenu        bool
-	NavDropDownButton []*types.NavDropDownItemButton
+	Animation         bool                           // 是否启用动画
+	NoCompress        bool                           // 是否不压缩
+	HideSideBar       bool                           // 是否隐藏侧边栏
+	HideHeader        bool                           // 是否隐藏头部
+	UpdateMenu        bool                           // 是否更新菜单
+	NavDropDownButton []*types.NavDropDownItemButton // 导航下拉按钮
 }
 
+// GetExecuteOptions 获取执行选项
+// 参数:
+//   - options: 执行选项列表
+//
+// 返回: 执行选项
 func GetExecuteOptions(options []ExecuteOptions) ExecuteOptions {
 	if len(options) == 0 {
 		return ExecuteOptions{Animation: true}
@@ -455,6 +561,12 @@ func GetExecuteOptions(options []ExecuteOptions) ExecuteOptions {
 	return options[0]
 }
 
+// Execute 执行模板渲染
+// 参数:
+//   - ctx: 上下文对象
+//   - param: 执行参数
+//
+// 返回: 渲染后的缓冲区
 func Execute(ctx *context.Context, param *ExecuteParam) *bytes.Buffer {
 
 	buf := new(bytes.Buffer)
@@ -480,6 +592,13 @@ func Execute(ctx *context.Context, param *ExecuteParam) *bytes.Buffer {
 	return buf
 }
 
+// WarningPanel 创建警告面板
+// 参数:
+//   - ctx: 上下文对象
+//   - msg: 消息内容
+//   - pts: 可选的页面类型
+//
+// 返回: 面板对象
 func WarningPanel(ctx *context.Context, msg string, pts ...PageType) types.Panel {
 	pt := Error500Page
 	if len(pts) > 0 {
@@ -493,6 +612,15 @@ func WarningPanel(ctx *context.Context, msg string, pts ...PageType) types.Panel
 	}
 }
 
+// WarningPanelWithDescAndTitle 创建带描述和标题的警告面板
+// 参数:
+//   - ctx: 上下文对象
+//   - msg: 消息内容
+//   - desc: 描述
+//   - title: 标题
+//   - pts: 可选的页面类型
+//
+// 返回: 面板对象
 func WarningPanelWithDescAndTitle(ctx *context.Context, msg, desc, title string, pts ...PageType) types.Panel {
 	pt := Error500Page
 	if len(pts) > 0 {
@@ -506,37 +634,47 @@ func WarningPanelWithDescAndTitle(ctx *context.Context, msg, desc, title string,
 	}
 }
 
+// DefaultFuncMap 默认模板函数映射
 var DefaultFuncMap = template.FuncMap{
-	"lang":     language.Get,
-	"langHtml": language.GetFromHtml,
+	"lang":     language.Get,         // 获取语言翻译
+	"langHtml": language.GetFromHtml, // 从HTML获取语言翻译
 	"link": func(cdnUrl, prefixUrl, assetsUrl string) string {
+		// 生成链接URL
 		if cdnUrl == "" {
 			return prefixUrl + assetsUrl
 		}
 		return cdnUrl + assetsUrl
 	},
 	"isLinkUrl": func(s string) bool {
+		// 判断是否为链接URL
 		return (len(s) > 7 && s[:7] == "http://") || (len(s) > 8 && s[:8] == "https://")
 	},
 	"render": func(s, old, repl template.HTML) template.HTML {
+		// 渲染HTML，替换字符串
 		return template.HTML(strings.ReplaceAll(string(s), string(old), string(repl)))
 	},
 	"renderJS": func(s template.JS, old, repl template.HTML) template.JS {
+		// 渲染JavaScript，替换字符串
 		return template.JS(strings.ReplaceAll(string(s), string(old), string(repl)))
 	},
 	"divide": func(a, b int) int {
+		// 整数除法
 		return a / b
 	},
 	"renderRowDataHTML": func(id, content template.HTML, value ...map[string]types.InfoItem) template.HTML {
+		// 渲染行数据HTML
 		return template.HTML(types.ParseTableDataTmplWithID(id, string(content), value...))
 	},
 	"renderRowDataJS": func(id template.HTML, content template.JS, value ...map[string]types.InfoItem) template.JS {
+		// 渲染行数据JavaScript
 		return template.JS(types.ParseTableDataTmplWithID(id, string(content), value...))
 	},
 	"attr": func(s template.HTML) template.HTMLAttr {
+		// 转换为HTML属性
 		return template.HTMLAttr(s)
 	},
 	"js": func(s interface{}) template.JS {
+		// 转换为JavaScript
 		if ss, ok := s.(string); ok {
 			return template.JS(ss)
 		}
@@ -546,6 +684,7 @@ var DefaultFuncMap = template.FuncMap{
 		return ""
 	},
 	"changeValue": func(f types.FormField, index int) types.FormField {
+		// 更新表单字段的值
 		if len(f.ValueArr) > 0 {
 			f.Value = template.HTML(f.ValueArr[index])
 		}
@@ -559,27 +698,63 @@ var DefaultFuncMap = template.FuncMap{
 	},
 }
 
+// BaseComponent 基础组件结构体
 type BaseComponent struct {
-	Name      string
-	HTMLData  string
-	CSS       template.CSS
-	JS        template.JS
-	Callbacks types.Callbacks
+	Name      string          // 组件名称
+	HTMLData  string          // HTML数据
+	CSS       template.CSS    // CSS样式
+	JS        template.JS     // JavaScript代码
+	Callbacks types.Callbacks // 回调函数
 }
 
-func (b *BaseComponent) IsAPage() bool                        { return false }
-func (b *BaseComponent) GetName() string                      { return b.Name }
-func (b *BaseComponent) GetAssetList() []string               { return make([]string, 0) }
+// IsAPage 判断是否为页面组件
+// 返回: 是否为页面组件
+func (b *BaseComponent) IsAPage() bool { return false }
+
+// GetName 获取组件名称
+// 返回: 组件名称
+func (b *BaseComponent) GetName() string { return b.Name }
+
+// GetAssetList 获取资源列表
+// 返回: 资源URL后缀列表
+func (b *BaseComponent) GetAssetList() []string { return make([]string, 0) }
+
+// GetAsset 根据名称获取资源
+// 参数:
+//   - name: 资源名称
+//
+// 返回: 资源内容和错误
 func (b *BaseComponent) GetAsset(name string) ([]byte, error) { return nil, nil }
-func (b *BaseComponent) GetJS() template.JS                   { return b.JS }
-func (b *BaseComponent) GetCSS() template.CSS                 { return b.CSS }
-func (b *BaseComponent) GetCallbacks() types.Callbacks        { return b.Callbacks }
+
+// GetJS 获取JavaScript代码
+// 返回: JavaScript代码
+func (b *BaseComponent) GetJS() template.JS { return b.JS }
+
+// GetCSS 获取CSS样式
+// 返回: CSS样式
+func (b *BaseComponent) GetCSS() template.CSS { return b.CSS }
+
+// GetCallbacks 获取回调函数
+// 返回: 回调函数列表
+func (b *BaseComponent) GetCallbacks() types.Callbacks { return b.Callbacks }
+
+// BindActionTo 将动作绑定到组件
+// 参数:
+//   - ctx: 上下文对象
+//   - action: 动作对象
+//   - id: 按钮ID
 func (b *BaseComponent) BindActionTo(ctx *context.Context, action types.Action, id string) {
 	action.SetBtnId(id)
 	b.JS += action.Js()
 	b.HTMLData += string(action.ExtContent(ctx))
 	b.Callbacks = append(b.Callbacks, action.GetCallbacks())
 }
+
+// GetContentWithData 使用数据获取内容
+// 参数:
+//   - obj: 数据对象
+//
+// 返回: HTML内容
 func (b *BaseComponent) GetContentWithData(obj interface{}) template.HTML {
 	buffer := new(bytes.Buffer)
 	tmpl, defineName := b.GetTemplate()
@@ -590,6 +765,8 @@ func (b *BaseComponent) GetContentWithData(obj interface{}) template.HTML {
 	return template.HTML(buffer.String())
 }
 
+// GetTemplate 获取模板对象
+// 返回: 模板对象和模板名称
 func (b *BaseComponent) GetTemplate() (*template.Template, string) {
 	tmpl, err := template.New(b.Name).
 		Funcs(DefaultFuncMap).

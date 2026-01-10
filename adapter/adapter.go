@@ -1,509 +1,557 @@
 // Copyright 2019 GoAdmin Core Team. All rights reserved.
 // Use of this source code is governed by a Apache-2.0 style
 // license that can be found in the LICENSE file.
+//
+// 版权所有 2019 GoAdmin 核心团队。保留所有权利。
+// 本源代码的使用受 Apache-2.0 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// adapter包提供了Web框架与GoAdmin框架之间的适配器接口
-// 该包定义了适配器需要实现的标准接口，使GoAdmin能够与不同的Web框架集成
-//
-// 主要功能：
-//   - 定义WebFrameWork接口，规范适配器的行为
-//   - 提供BaseAdapter基础适配器，包含通用功能
-//   - 实现用户认证、权限检查、内容渲染等核心逻辑
-//   - 支持多种Web框架（如gin、chi、echo、net/http等）
-//
-// 架构设计：
-//   - WebFrameWork接口：定义适配器必须实现的方法
-//   - BaseAdapter结构体：提供基础功能，各具体适配器可嵌入使用
-//   - 适配器模式：将不同Web框架的API统一为GoAdmin可用的接口
-//
-// 核心概念：
-//   - 适配器（Adapter）：连接Web框架和GoAdmin的桥梁
-//   - 上下文（Context）：封装HTTP请求和响应
-//   - 插件（Plugin）：可插拔的功能模块
-//   - 面板（Panel）：页面内容的数据结构
-//
-// 使用场景：
-//   - 为新的Web框架创建适配器
-//   - 理解GoAdmin与Web框架的交互方式
-//   - 扩展或修改适配器功能
-//
-// 注意事项：
-//   - 所有适配器必须实现WebFrameWork接口
-//   - 适配器应保持框架无关性
-//   - 正确处理错误和异常情况
-//
-// 作者: GoAdmin Core Team
-// 创建日期: 2019-01-01
-// 版本: 1.0.0
 package adapter
 
 import (
-	"bytes"
-	"fmt"
-	"net/http"
-	"net/url"
+	"bytes"    // 字节缓冲区操作，用于存储渲染后的HTML内容
+	"fmt"      // 格式化I/O，用于字符串格式化和错误消息生成
+	"net/http" // HTTP客户端和服务器，提供HTTP请求和响应处理
+	"net/url"  // URL解析和查询，用于处理URL参数和表单数据
 
-	"github.com/purpose168/GoAdmin/context"
-	"github.com/purpose168/GoAdmin/modules/auth"
-	"github.com/purpose168/GoAdmin/modules/config"
-	"github.com/purpose168/GoAdmin/modules/constant"
-	"github.com/purpose168/GoAdmin/modules/db"
-	"github.com/purpose168/GoAdmin/modules/errors"
-	"github.com/purpose168/GoAdmin/modules/logger"
-	"github.com/purpose168/GoAdmin/modules/menu"
-	"github.com/purpose168/GoAdmin/plugins"
-	"github.com/purpose168/GoAdmin/plugins/admin/models"
-	"github.com/purpose168/GoAdmin/template"
-	"github.com/purpose168/GoAdmin/template/types"
+	"github.com/purpose168/GoAdmin/context"              // 上下文管理，提供请求和响应的抽象
+	"github.com/purpose168/GoAdmin/modules/auth"         // 认证模块，处理用户身份验证和权限管理
+	"github.com/purpose168/GoAdmin/modules/config"       // 配置模块，提供配置读取和URL处理功能
+	"github.com/purpose168/GoAdmin/modules/constant"     // 常量定义，包含框架使用的各种常量
+	"github.com/purpose168/GoAdmin/modules/db"           // 数据库模块，提供数据库连接和操作接口
+	"github.com/purpose168/GoAdmin/modules/errors"       // 错误处理，提供框架特定的错误类型和消息
+	"github.com/purpose168/GoAdmin/modules/logger"       // 日志模块，提供日志记录功能
+	"github.com/purpose168/GoAdmin/modules/menu"         // 菜单模块，提供菜单生成和管理功能
+	"github.com/purpose168/GoAdmin/plugins"              // 插件接口，定义插件的基本结构和功能
+	"github.com/purpose168/GoAdmin/plugins/admin/models" // 管理模型，提供用户模型等数据结构
+	"github.com/purpose168/GoAdmin/template"             // 模板引擎，提供HTML模板渲染功能
+	"github.com/purpose168/GoAdmin/template/types"       // 模板类型，定义面板、按钮等模板组件
 )
 
-// WebFrameWork接口是Web框架与GoAdmin之间的适配器接口
-// 所有Web框架适配器都必须实现此接口，以使GoAdmin能够与不同的Web框架无缝集成
+// WebFrameWork 接口定义了Web框架适配器需要实现的方法
+// 该接口是GoAdmin与不同Web框架（如Gin、Echo、Chi等）之间的桥梁
+// 通过实现这个接口，GoAdmin可以适配到各种Go Web框架
 //
-// 接口设计原理：
-//   - 使用接口抽象不同Web框架的API差异
-//   - 提供统一的方法签名，使GoAdmin代码框架无关
-//   - 支持路由注册、上下文处理、用户认证等核心功能
+// 设计模式说明：
+// - 这是一个适配器模式(Adapter Pattern)的应用
+// - 允许GoAdmin核心功能与不同的Web框架解耦
+// - 每个Web框架都需要实现这个接口来提供适配器
 //
-// 实现要求：
-//  1. 必须实现所有定义的方法
-//  2. 保持方法行为的一致性
-//  3. 正确处理错误和异常
-//  4. 遵循Go语言的接口设计最佳实践
+// 使用示例：
 //
-// 已实现的适配器：
-//   - gin: adapter/gin/gin.go
-//   - chi: adapter/chi/chi.go
-//   - echo: adapter/echo/echo.go
-//   - net/http: adapter/nethttp/nethttp.go
-//   - buffalo: adapter/buffalo/buffalo.go
-//   - beego: adapter/beego/beego.go
-//   - iris: adapter/iris/iris.go
-//   - fiber: adapter/fiber/fiber.go
+//	// Gin框架适配器示例
+//	type GinAdapter struct {
+//	    BaseAdapter
+//	    engine *gin.Engine
+//	    ctx    *gin.Context
+//	}
+//
+//	func (g *GinAdapter) Name() string {
+//	    return "gin"
+//	}
+//
+//	// 实现其他接口方法...
 type WebFrameWork interface {
-	// Name返回Web框架的名称
-	//
-	// 返回值：
-	//   - string: 框架名称，如"gin"、"chi"、"echo"等
-	//
-	// 使用场景：
-	//   - 识别当前使用的适配器类型
-	//   - 日志记录和调试
-	//   - 条件判断和分支处理
+	// Name 返回适配器的名称
+	// 用于标识当前使用的是哪个Web框架
+	// 返回值示例: "gin", "echo", "chi", "fiber" 等
 	Name() string
 
-	// Use方法将插件注入到Web框架引擎中
+	// Use 将GoAdmin插件注册到Web框架中
+	// 该方法会遍历所有插件，并将它们的路由处理器添加到Web框架中
 	//
 	// 参数说明：
-	//   - app: Web框架引擎实例（如*gin.Engine、*chi.Mux等）
-	//   - plugins: 插件列表，包含需要注册的所有插件
+	//   - app: Web框架的实例（如 *gin.Engine, *echo.Echo 等）
+	//   - plugins: 插件列表，每个插件提供一组路由和处理函数
 	//
 	// 返回值：
-	//   - error: 注册过程中的错误，成功返回nil
-	//
-	// 工作原理：
-	//   1. 设置Web框架引擎到适配器
-	//   2. 遍历所有插件
-	//   3. 为每个插件注册路由和处理器
-	//   4. 处理插件前缀（如有）
+	//   - error: 如果设置应用或添加处理器失败，返回错误信息
 	//
 	// 注意事项：
-	//   - app参数类型必须与适配器匹配
-	//   - 插件的路由会被自动注册到框架
-	//   - 前缀会自动添加到插件路由前
+	//   - 插件的路由会根据插件的Prefix()方法添加前缀
+	//   - 每个插件可能包含多个路由和处理函数
+	//   - 该方法通常在初始化时调用一次
 	Use(app interface{}, plugins []plugins.Plugin) error
 
-	// Content方法将面板HTML响应添加到Web框架上下文中
+	// Content 渲染并返回管理面板的内容
+	// 这是GoAdmin的核心方法，负责生成整个管理页面的HTML
 	//
 	// 参数说明：
-	//   - ctx: Web框架上下文，包含HTTP请求和响应
-	//   - fn: 获取面板的函数，用于生成面板内容
-	//   - fn2: 节点处理器，用于处理面板中的节点
-	//   - navButtons: 导航按钮列表，用于在面板上显示操作按钮
+	//   - ctx: Web框架的上下文对象（如 *gin.Context）
+	//   - fn: 获取面板内容的函数，返回 types.Panel
+	//   - fn2: 节点处理器，用于处理面板的回调函数
+	//   - navButtons: 导航按钮列表，显示在页面顶部
 	//
 	// 工作流程：
-	//   1. 从上下文中获取用户信息
-	//   2. 验证用户权限
-	//   3. 调用getPanelFn生成面板内容
-	//   4. 渲染HTML模板
-	//   5. 写入响应
+	//   1. 从Cookie中获取用户信息
+	//   2. 验证用户身份和权限
+	//   3. 调用getPanelFn获取面板内容
+	//   4. 渲染完整的HTML页面（包括菜单、面板、按钮等）
+	//   5. 将HTML写入响应
 	//
-	// 使用场景：
-	//   - 渲染管理后台页面
-	//   - 显示数据表格和表单
-	//   - 处理用户交互操作
+	// 注意事项：
+	//   - 如果用户未登录或权限不足，会重定向到登录页
+	//   - 支持PJAX（部分页面加载）请求
+	//   - 会根据IsPjax()决定渲染完整页面还是仅面板内容
 	Content(ctx interface{}, fn types.GetPanelFn, fn2 context.NodeProcessor, navButtons ...types.Button)
 
-	// User从给定的Web框架上下文中获取认证用户模型
+	// User 从上下文中获取当前登录的用户信息
 	//
 	// 参数说明：
-	//   - ctx: Web框架上下文，包含HTTP请求和响应
+	//   - ctx: Web框架的上下文对象
 	//
 	// 返回值：
 	//   - models.UserModel: 用户模型，包含用户详细信息
-	//   - bool: 是否成功获取用户信息，true表示成功，false表示失败
+	//   - bool: 是否成功获取用户，true表示成功，false表示失败
 	//
-	// 工作原理：
-	//   1. 从上下文中提取cookie
-	//   2. 使用cookie验证用户身份
-	//   3. 从数据库获取用户信息
-	//   4. 返回用户模型
-	//
-	// 使用示例：
-	//   user, ok := adapter.User(ctx)
-	//   if !ok {
-	//       // 处理未登录情况
-	//   }
+	// 注意事项：
+	//   - 该方法通过Cookie验证用户身份
+	//   - 如果Cookie无效或用户不存在，返回空模型和false
+	//   - 获取用户后会释放数据库连接
 	User(ctx interface{}) (models.UserModel, bool)
 
-	// AddHandler将GoAdmin的路由和处理器注入到Web框架中
+	// AddHandler 添加路由处理器到Web框架
 	//
 	// 参数说明：
-	//   - method: HTTP方法，如GET、POST、PUT、DELETE等
-	//   - path: 路由路径，支持路径参数（如:/user/:id）
+	//   - method: HTTP方法（GET, POST, PUT, DELETE 等）
+	//   - path: 路由路径（如 "/admin/user"）
 	//   - handlers: 处理器链，按顺序执行
 	//
-	// 工作原理：
-	//   1. 将路由注册到Web框架
-	//   2. 绑定处理器链到路由
-	//   3. 处理路径参数（如需要）
+	// 使用场景：
+	//   - 注册GoAdmin的管理路由
+	//   - 注册插件的API路由
+	//   - 注册自定义的路由处理器
 	//
-	// 使用示例：
-	//   AddHandler("GET", "/users", handlers)
-	//   AddHandler("POST", "/users", handlers)
+	// 注意事项：
+	//   - handlers是处理器链，会按顺序执行
+	//   - 中间件应该在handlers链的前面
+	//   - 路径可以包含参数（如 "/user/:id"）
 	AddHandler(method, path string, handlers context.Handlers)
 
-	// DisableLog禁用日志记录
+	// DisableLog 禁用日志记录
+	// 用于在不需要日志记录的场景下关闭日志输出
 	//
-	// 使用场景：
-	//   - 在测试环境中禁用日志
-	//   - 减少日志输出
-	//   - 性能优化
+	// 注意事项：
+	//   - 该方法通常在开发或测试环境中使用
+	//   - 不同适配器的实现可能不同
+	//   - 某些适配器可能不支持此功能
 	DisableLog()
 
-	// Static注册静态文件路由
+	// Static 配置静态文件服务
+	// 用于提供CSS、JS、图片等静态资源
 	//
 	// 参数说明：
-	//   - prefix: URL前缀，如"/static"
-	//   - path: 文件系统路径，如"./assets"
+	//   - prefix: URL前缀（如 "/static"）
+	//   - path: 文件系统路径（如 "./assets/static"）
 	//
 	// 使用示例：
-	//   Static("/static", "./assets")
-	//   访问: http://localhost:8080/static/logo.png
+	//   Static("/static", "./assets/static")
+	//   // 访问 http://localhost:8080/static/style.css
+	//   // 会返回 ./assets/static/style.css 文件
+	//
+	// 注意事项：
+	//   - path必须是绝对路径或相对于工作目录的路径
+	//   - 如果目录不存在，可能会返回404错误
 	Static(prefix, path string)
 
-	// Run启动Web服务器
+	// Run 启动Web服务器
+	// 开始监听HTTP请求
 	//
 	// 返回值：
-	//   - error: 启动过程中的错误
+	//   - error: 如果启动失败，返回错误信息
 	//
 	// 注意事项：
-	//   - 此方法会阻塞，直到服务器停止
-	//   - 需要先配置好所有路由和中间件
+	//   - 该方法会阻塞当前goroutine
+	//   - 通常在main函数的最后调用
+	//   - 端口配置通常来自配置文件
 	Run() error
 
-	// 辅助函数
-	// ================================
-
-	// SetApp设置Web框架引擎实例到适配器
+	// SetApp 设置Web框架的应用实例
+	// 用于将适配器与Web框架实例关联
 	//
 	// 参数说明：
-	//   - app: Web框架引擎实例
+	//   - app: Web框架的实例（如 *gin.Engine, *echo.Echo 等）
 	//
 	// 返回值：
-	//   - error: 设置过程中的错误
+	//   - error: 如果设置失败，返回错误信息
 	//
 	// 注意事项：
-	//   - 必须在注册路由之前调用
+	//   - 该方法通常在Use()方法中被调用
+	//   - 只需要调用一次
 	SetApp(app interface{}) error
 
-	// SetConnection设置数据库连接
+	// SetConnection 设置数据库连接
+	// 用于将数据库连接注入到适配器中
 	//
 	// 参数说明：
 	//   - conn: 数据库连接对象
 	//
-	// 使用场景：
-	//   - 配置数据库连接
-	//   - 初始化适配器
+	// 注意事项：
+	//   - 该连接会被用于所有数据库操作
+	//   - 连接通常在初始化时设置
+	//   - BaseAdapter已经提供了默认实现
 	SetConnection(conn db.Connection)
 
-	// GetConnection获取数据库连接
+	// GetConnection 获取数据库连接
+	// 返回当前适配器使用的数据库连接
 	//
 	// 返回值：
 	//   - db.Connection: 数据库连接对象
 	//
-	// 使用场景：
-	//   - 执行数据库查询
-	//   - 用户认证
-	//   - 权限验证
+	// 注意事项：
+	//   - BaseAdapter已经提供了默认实现
+	//   - 返回的连接应该被正确管理（释放或复用）
 	GetConnection() db.Connection
 
-	// SetContext设置上下文对象到适配器
+	// SetContext 设置当前请求的上下文
+	// 用于在适配器中保存请求上下文
 	//
 	// 参数说明：
-	//   - ctx: Web框架上下文
+	//   - ctx: Web框架的上下文对象
 	//
 	// 返回值：
-	//   - WebFrameWork: 返回适配器实例
+	//   - WebFrameWork: 返回适配器自身，支持链式调用
 	//
-	// 使用场景：
-	//   - 在请求处理过程中设置上下文
-	//   - 链式调用适配器方法
-	SetContext(ctx interface{}) WebFrameWork
-
-	// GetCookie从请求中获取指定名称的cookie值
-	//
-	// 返回值：
-	//   - string: cookie的值
-	//   - error: 获取失败时的错误信息
-	//
-	// 使用场景：
-	//   - 获取会话token
-	//   - 读取用户偏好设置
-	//   - 验证用户身份
-	GetCookie() (string, error)
-
-	// Lang从查询参数中获取语言设置
-	//
-	// 返回值：
-	//   - string: 语言代码，如"zh-CN"、"en-US"等
-	//
-	// 使用场景：
-	//   - 国际化支持
-	//   - 根据用户语言显示不同内容
-	Lang() string
-
-	// Path获取请求的路径部分
-	//
-	// 返回值：
-	//   - string: 请求路径，如"/admin/users"
-	//
-	// 使用场景：
-	//   - 路由匹配
-	//   - 权限验证
-	//   - 日志记录
-	Path() string
-
-	// Method获取HTTP请求方法
-	//
-	// 返回值：
-	//   - string: HTTP方法，如GET、POST、PUT、DELETE等
-	//
-	// 使用场景：
-	//   - 区分不同类型的请求
-	//   - 权限控制
-	//   - 日志记录
-	Method() string
-
-	// Request获取原始HTTP请求对象
-	//
-	// 返回值：
-	//   - *http.Request: 原始HTTP请求对象
-	//
-	// 使用场景：
-	//   - 访问请求的所有属性
-	//   - 获取请求头、Cookie等
-	Request() *http.Request
-
-	// FormParam获取表单参数
-	//
-	// 返回值：
-	//   - url.Values: 表单参数的键值对集合
-	//
-	// 使用场景：
-	//   - 处理表单提交
-	//   - 文件上传
-	//   - POST请求参数获取
-	FormParam() url.Values
-
-	// Query获取URL查询参数
-	//
-	// 返回值：
-	//   - url.Values: 查询参数的键值对集合
-	//
-	// 使用场景：
-	//   - 获取GET请求参数
-	//   - 分页参数
-	//   - 搜索和过滤参数
-	Query() url.Values
-
-	// IsPjax判断是否为PJAX请求
-	//
-	// 返回值：
-	//   - bool: true表示是PJAX请求，false表示不是
-	//
-	// PJAX说明：
-	//   PJAX（pushState + AJAX）允许在不刷新整个页面的情况下更新部分内容
-	IsPjax() bool
-
-	// Redirect重定向到登录页面
-	//
-	// 使用场景：
-	//   - 用户未登录时重定向
-	//   - 会话过期时重新认证
-	Redirect()
-
-	// SetContentType设置响应的Content-Type头部
+	// 使用示例：
+	//   adapter.SetContext(ctx).GetCookie()
 	//
 	// 注意事项：
-	//   - 必须在写入响应体之前调用
+	//   - 每个请求都应该调用此方法设置上下文
+	//   - 返回适配器自身，支持链式调用
+	SetContext(ctx interface{}) WebFrameWork
+
+	// GetCookie 从请求中获取Cookie值
+	// 用于获取认证Cookie或其他Cookie
+	//
+	// 返回值：
+	//   - string: Cookie的值
+	//   - error: 如果获取失败，返回错误信息
+	//
+	// 注意事项：
+	//   - 默认获取名为"admin_cookie"的Cookie
+	//   - 如果Cookie不存在，返回空字符串和错误
+	GetCookie() (string, error)
+
+	// Lang 获取当前请求的语言设置
+	// 用于国际化支持
+	//
+	// 返回值：
+	//   - string: 语言代码（如 "zh-CN", "en-US"）
+	//
+	// 注意事项：
+	//   - 语言通常从请求头或Cookie中获取
+	//   - 默认语言通常在配置文件中设置
+	Lang() string
+
+	// Path 获取当前请求的路径
+	// 不包含查询参数
+	//
+	// 返回值：
+	//   - string: 请求路径（如 "/admin/user/list"）
+	//
+	// 使用场景：
+	//   - 权限验证
+	//   - 菜单激活状态判断
+	//   - 路由匹配
+	Path() string
+
+	// Method 获取当前请求的HTTP方法
+	//
+	// 返回值：
+	//   - string: HTTP方法（GET, POST, PUT, DELETE 等）
+	//
+	// 使用场景：
+	//   - 权限验证（区分读取和修改操作）
+	//   - 路由匹配
+	Method() string
+
+	// Request 获取原始的HTTP请求对象
+	// 返回标准库的http.Request
+	//
+	// 返回值：
+	//   - *http.Request: HTTP请求对象
+	//
+	// 使用场景：
+	//   - 访问请求头、请求体等原始数据
+	//   - 与不依赖特定框架的代码交互
+	Request() *http.Request
+
+	// FormParam 获取表单参数
+	// 解析并返回POST/PUT请求的表单数据
+	//
+	// 返回值：
+	//   - url.Values: 表单参数的键值对
+	//
+	// 使用示例：
+	//   params := adapter.FormParam()
+	//   name := params.Get("name")
+	//
+	// 注意事项：
+	//   - 包含Content-Type为application/x-www-form-urlencoded的数据
+	//   - 对于multipart/form-data，需要特殊处理
+	FormParam() url.Values
+
+	// Query 获取URL查询参数
+	// 解析并返回URL中的查询字符串
+	//
+	// 返回值：
+	//   - url.Values: 查询参数的键值对
+	//
+	// 使用示例：
+	//   query := adapter.Query()
+	//   page := query.Get("page")
+	//
+	// 注意事项：
+	//   - 返回?后面的参数
+	//   - 参数值会自动进行URL解码
+	Query() url.Values
+
+	// IsPjax 判断当前请求是否为PJAX请求
+	// PJAX是一种技术，允许只更新页面的一部分
+	//
+	// 返回值：
+	//   - bool: true表示是PJAX请求，false表示普通请求
+	//
+	// 注意事项：
+	//   - PJAX请求通常包含X-PJAX请求头
+	//   - PJAX请求只返回面板内容，不返回完整页面
+	IsPjax() bool
+
+	// Redirect 重定向到登录页
+	// 当用户未登录或权限不足时调用
+	//
+	// 注意事项：
+	//   - 通常重定向到配置文件中指定的登录页
+	//   - 会保存原始请求URL，登录后可以跳转回来
+	Redirect()
+
+	// SetContentType 设置响应的Content-Type
+	// 通常设置为"text/html; charset=utf-8"
+	//
+	// 注意事项：
+	//   - 在写入响应体之前调用
+	//   - BaseAdapter已经提供了默认实现
 	SetContentType()
 
-	// Write写入响应体数据
+	// Write 写入响应体
+	// 将数据写入HTTP响应
 	//
 	// 参数说明：
 	//   - body: 要写入的字节数据
+	//
+	// 注意事项：
+	//   - 只能调用一次，多次调用会覆盖之前的内容
+	//   - 应该在SetContentType()之后调用
 	Write(body []byte)
 
-	// CookieKey返回cookie的键名
+	// CookieKey 获取认证Cookie的键名
+	// 返回用于存储用户认证信息的Cookie名称
 	//
 	// 返回值：
-	//   - string: cookie键名
+	//   - string: Cookie键名，默认为"admin_cookie"
+	//
+	// 注意事项：
+	//   - BaseAdapter已经提供了默认实现
+	//   - 可以在配置文件中自定义
 	CookieKey() string
 
-	// HTMLContentType返回HTML的Content-Type值
+	// HTMLContentType 返回HTML响应的Content-Type
 	//
 	// 返回值：
-	//   - string: Content-Type值，通常为"text/html; charset=utf-8"
+	//   - string: Content-Type值，默认为"text/html; charset=utf-8"
+	//
+	// 注意事项：
+	//   - BaseAdapter已经提供了默认实现
+	//   - 指定UTF-8编码以支持中文
 	HTMLContentType() string
 }
 
-// BaseAdapter是基础适配器结构体，包含一些通用的辅助函数
-// 各具体适配器可以嵌入此结构体以复用这些功能
+// BaseAdapter 是Web框架适配器的基础实现
+// 提供了WebFrameWork接口的通用方法，可以被各个Web框架适配器嵌入使用
 //
-// 设计模式：
-//   - 使用结构体组合实现代码复用
-//   - 提供默认实现，具体适配器可选择性覆盖
-//   - 遵循Go语言的组合优于继承原则
-//
-// 字段说明：
-//   - db: 数据库连接对象，用于数据库操作
+// 设计模式说明：
+// - 这是一个模板方法模式(Template Method Pattern)的应用
+// - BaseAdapter提供了通用的方法实现
+// - 具体的Web框架适配器只需要实现框架特定的方法
+// - 减少了重复代码，提高了代码复用性
 //
 // 使用示例：
 //
 //	type GinAdapter struct {
-//	    adapter.BaseAdapter
+//	    BaseAdapter
 //	    engine *gin.Engine
+//	    ctx    *gin.Context
 //	}
+//
+//	// GinAdapter只需要实现Gin特定的方法
+//	// 其他方法可以直接使用BaseAdapter的实现
 type BaseAdapter struct {
+	// db 数据库连接
+	// 用于存储和管理数据库连接，供所有数据库操作使用
+	// 该连接在初始化时通过SetConnection方法设置
 	db db.Connection
 }
 
-// SetConnection设置数据库连接
+// SetConnection 设置数据库连接
+// 将数据库连接注入到适配器中，供后续使用
 //
 // 参数说明：
-//   - conn: 数据库连接对象
+//   - conn: 数据库连接对象，实现了db.Connection接口
 //
 // 使用场景：
-//   - 初始化适配器时配置数据库连接
-//   - 切换数据库连接
-//   - 多数据库支持
+//   - 在初始化GoAdmin时设置数据库连接
+//   - 在需要切换数据库连接时调用
+//
+// 注意事项：
+//   - 该连接会被所有数据库操作共享
+//   - 应该确保连接的有效性
+//   - 通常在应用启动时调用一次
 func (base *BaseAdapter) SetConnection(conn db.Connection) {
 	base.db = conn
 }
 
-// GetConnection获取数据库连接
+// GetConnection 获取数据库连接
+// 返回当前适配器使用的数据库连接
 //
 // 返回值：
 //   - db.Connection: 数据库连接对象
 //
 // 使用场景：
-//   - 执行数据库查询
-//   - 用户认证
-//   - 权限验证
+//   - 在需要执行数据库查询时获取连接
+//   - 在验证用户身份时访问数据库
+//   - 在获取菜单数据时查询数据库
+//
+// 注意事项：
+//   - 返回的连接应该被正确管理
+//   - 不要关闭返回的连接，它可能被其他地方使用
+//   - 如果连接未设置，返回nil
 func (base *BaseAdapter) GetConnection() db.Connection {
 	return base.db
 }
 
-// HTMLContentType返回默认的HTML Content-Type头部值
+// HTMLContentType 返回HTML响应的Content-Type
+// 设置为"text/html; charset=utf-8"以支持中文显示
 //
 // 返回值：
-//   - string: Content-Type值，固定返回"text/html; charset=utf-8"
+//   - string: Content-Type值，固定为"text/html; charset=utf-8"
 //
 // 使用场景：
-//   - 设置响应的Content-Type头部
-//   - 确保正确的字符编码
+//   - 在设置响应头时使用
+//   - 确保浏览器正确解析HTML和中文内容
+//
+// 注意事项：
+//   - UTF-8编码支持所有Unicode字符，包括中文
+//   - 该方法被Content()方法调用
+//   - 子类可以覆盖此方法以返回不同的Content-Type
 func (*BaseAdapter) HTMLContentType() string {
 	return "text/html; charset=utf-8"
 }
 
-// CookieKey返回cookie的键名
+// CookieKey 获取认证Cookie的键名
+// 返回用于存储用户认证信息的Cookie名称
 //
 // 返回值：
-//   - string: cookie键名，从auth包获取默认值
+//   - string: Cookie键名，默认为"admin_cookie"
 //
 // 使用场景：
-//   - 获取认证cookie的键名
-//   - 设置和读取用户会话
+//   - 在设置Cookie时使用
+//   - 在获取Cookie时使用
+//   - 在验证用户身份时使用
+//
+// 注意事项：
+//   - 默认值来自auth.DefaultCookieKey常量
+//   - 可以在配置文件中自定义
+//   - 确保前后端使用相同的Cookie键名
 func (*BaseAdapter) CookieKey() string {
 	return auth.DefaultCookieKey
 }
 
-// GetUser是从上下文中获取认证用户模型的辅助函数
+// GetUser 从上下文中获取当前登录的用户信息
+// 通过Cookie验证用户身份并返回用户模型
 //
 // 参数说明：
-//   - ctx: Web框架上下文，包含HTTP请求和响应
-//   - wf: WebFrameWork适配器实例
+//   - ctx: Web框架的上下文对象（如 *gin.Context）
+//   - wf: WebFrameWork接口实例，用于调用其他方法
 //
 // 返回值：
 //   - models.UserModel: 用户模型，包含用户详细信息
-//   - bool: 是否成功获取用户信息，true表示成功，false表示失败
+//   - bool: 是否成功获取用户，true表示成功，false表示失败
 //
-// 工作原理：
-//  1. 使用SetContext设置上下文
-//  2. 从上下文中获取cookie
-//  3. 使用cookie验证用户身份
-//  4. 从数据库获取用户信息
-//  5. 释放数据库连接并返回用户模型
+// 工作流程：
+//  1. 设置上下文到适配器
+//  2. 从请求中获取Cookie
+//  3. 使用Cookie验证用户身份
+//  4. 释放数据库连接
+//  5. 返回用户模型和验证结果
 //
-// 使用示例：
-//
-//	user, ok := adapter.GetUser(ctx, wf)
-//	if !ok {
-//	    // 处理未登录情况
-//	}
+// 注意事项：
+//   - 如果Cookie获取失败或无效，返回空模型和false
+//   - 获取用户后会释放数据库连接，避免连接泄漏
+//   - 该方法被User()方法调用
 func (*BaseAdapter) GetUser(ctx interface{}, wf WebFrameWork) (models.UserModel, bool) {
+	// 从请求中获取Cookie
 	cookie, err := wf.SetContext(ctx).GetCookie()
 
+	// 如果获取Cookie失败，返回空模型和false
 	if err != nil {
 		return models.UserModel{}, false
 	}
 
+	// 使用Cookie验证用户身份并获取用户信息
+	// auth.GetCurUser会查询数据库验证Cookie的有效性
 	user, exist := auth.GetCurUser(cookie, wf.GetConnection())
+
+	// 释放数据库连接，避免连接泄漏
 	return user.ReleaseConn(), exist
 }
 
-// GetUse是将插件添加到Web框架的辅助函数
+// GetUse 将GoAdmin插件注册到Web框架中
+// 该方法会遍历所有插件，并将它们的路由处理器添加到Web框架中
 //
 // 参数说明：
-//   - app: Web框架引擎实例
-//   - plugin: 插件列表，包含需要注册的所有插件
-//   - wf: WebFrameWork适配器实例
+//   - app: Web框架的实例（如 *gin.Engine, *echo.Echo 等）
+//   - plugin: 插件列表，每个插件提供一组路由和处理函数
+//   - wf: WebFrameWork接口实例，用于调用其他方法
 //
 // 返回值：
-//   - error: 注册过程中的错误，成功返回nil
+//   - error: 如果设置应用或添加处理器失败，返回错误信息
 //
-// 工作原理：
-//  1. 调用SetApp设置Web框架引擎
+// 工作流程：
+//  1. 调用SetApp设置Web框架实例
 //  2. 遍历所有插件
-//  3. 获取每个插件的路由和处理器
-//  4. 如果插件有前缀，将前缀添加到路由前
-//  5. 调用AddHandler注册路由
+//  3. 对每个插件，遍历其所有路由
+//  4. 如果插件有前缀，将前缀添加到路由路径
+//  5. 调用AddHandler注册路由处理器
+//
+// 使用示例：
+//
+//	err := adapter.GetUse(ginEngine, []plugins.Plugin{adminPlugin}, adapter)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 //
 // 注意事项：
-//   - 插件前缀会自动添加到路由前
-//   - 所有插件的路由都会被注册
-//   - app参数类型必须与适配器匹配
+//   - 插件的路由会根据插件的Prefix()方法添加前缀
+//   - 每个插件可能包含多个路由和处理函数
+//   - 该方法通常在初始化时调用一次
+//   - 如果插件的前缀为空，则不添加前缀
 func (*BaseAdapter) GetUse(app interface{}, plugin []plugins.Plugin, wf WebFrameWork) error {
+	// 设置Web框架实例到适配器
 	if err := wf.SetApp(app); err != nil {
 		return err
 	}
 
+	// 遍历所有插件
 	for _, plug := range plugin {
+		// 遍历插件的所有路由
 		for path, handlers := range plug.GetHandler() {
+			// 如果插件有前缀，将前缀添加到路由路径
 			if plug.Prefix() == "" {
+				// 没有前缀，直接注册路由
 				wf.AddHandler(path.Method, path.URL, handlers)
 			} else {
+				// 有前缀，将前缀添加到路由路径
+				// config.Url()会处理URL格式
 				wf.AddHandler(path.Method, config.Url("/"+plug.Prefix()+path.URL), handlers)
 			}
 		}
@@ -512,146 +560,162 @@ func (*BaseAdapter) GetUse(app interface{}, plugin []plugins.Plugin, wf WebFrame
 	return nil
 }
 
-// Run是BaseAdapter的默认实现，会触发panic
+// Run 启动Web服务器
+// 这是一个占位方法，具体实现由各个Web框架适配器提供
+//
+// 返回值：
+//   - 无，直接panic
 //
 // 注意事项：
-//   - 具体适配器必须覆盖此方法
-//   - 此方法仅作为占位符，不应被调用
+//   - 该方法必须被子类覆盖
+//   - 如果直接调用，会触发panic
+//   - 每个Web框架适配器都应该实现自己的Run方法
 func (*BaseAdapter) Run() error { panic("not implement") }
 
-// DisableLog是BaseAdapter的默认实现，会触发panic
+// DisableLog 禁用日志记录
+// 这是一个占位方法，具体实现由各个Web框架适配器提供
 //
 // 注意事项：
-//   - 具体适配器必须覆盖此方法
-//   - 此方法仅作为占位符，不应被调用
+//   - 该方法必须被子类覆盖
+//   - 如果直接调用，会触发panic
+//   - 每个Web框架适配器都应该实现自己的DisableLog方法
 func (*BaseAdapter) DisableLog() { panic("not implement") }
 
-// Static是BaseAdapter的默认实现，会触发panic
-//
-// 注意事项：
-//   - 具体适配器必须覆盖此方法
-//   - 此方法仅作为占位符，不应被调用
-func (*BaseAdapter) Static(_, _ string) { panic("not implement") }
-
-// GetContent是adapter.Content的辅助函数，用于生成和渲染管理面板内容
+// Static 配置静态文件服务
+// 这是一个占位方法，具体实现由各个Web框架适配器提供
 //
 // 参数说明：
-//   - ctx: Web框架上下文，包含HTTP请求和响应
-//   - getPanelFn: 获取面板的函数，用于生成面板内容
-//   - wf: WebFrameWork适配器实例
-//   - navButtons: 导航按钮列表，用于在面板上显示操作按钮
-//   - fn: 节点处理器，用于处理面板中的节点
+//   - _: URL前缀（占位符）
+//   - _: 文件系统路径（占位符）
+//
+// 注意事项：
+//   - 该方法必须被子类覆盖
+//   - 如果直接调用，会触发panic
+//   - 每个Web框架适配器都应该实现自己的Static方法
+func (*BaseAdapter) Static(_, _ string) { panic("not implement") }
+
+// GetContent 渲染并返回管理面板的内容
+// 这是GoAdmin的核心方法，负责生成整个管理页面的HTML
+//
+// 参数说明：
+//   - ctx: Web框架的上下文对象（如 *gin.Context）
+//   - getPanelFn: 获取面板内容的函数，返回 types.Panel
+//   - wf: WebFrameWork接口实例，用于调用其他方法
+//   - navButtons: 导航按钮列表，显示在页面顶部
+//   - fn: 节点处理器，用于处理面板的回调函数
 //
 // 工作流程：
-//  1. 从上下文中获取cookie并验证用户身份
-//  2. 检查用户权限
-//  3. 生成面板内容
-//  4. 渲染HTML模板
-//  5. 写入响应
+//  1. 设置上下文到适配器
+//  2. 从请求中获取Cookie
+//  3. 验证用户身份（如果Cookie无效或为空，重定向到登录页）
+//  4. 使用Cookie验证用户身份并获取用户信息
+//  5. 如果验证失败，重定向到登录页
+//  6. 检查用户权限
+//  7. 如果权限不足，显示403错误页面
+//  8. 如果权限足够，调用getPanelFn获取面板内容
+//  9. 如果获取面板失败，显示错误页面
+//  10. 执行面板的回调函数
+//  11. 获取模板（根据是否为PJAX请求）
+//  12. 渲染完整的HTML页面
+//  13. 设置Content-Type
+//  14. 将HTML写入响应
 //
-// 错误处理：
-//   - Cookie获取失败或为空：重定向到登录页
-//   - 用户认证失败：重定向到登录页
-//   - 权限不足：显示403错误页面
-//   - 面板生成失败：显示错误信息
+// 使用示例：
+//
+//	adapter.GetContent(ctx, func(ctx interface{}) (types.Panel, error) {
+//	    return types.Panel{
+//	        Title: "用户列表",
+//	        Content: template.HTML("<table>...</table>"),
+//	    }, nil
+//	}, adapter, navButtons, func(callbacks ...context.Node) {
+//	    // 处理回调
+//	})
+//
+// 注意事项：
+//   - 如果用户未登录或权限不足，会重定向到登录页
+//   - 支持PJAX（部分页面加载）请求
+//   - 会根据IsPjax()决定渲染完整页面还是仅面板内容
+//   - 模板渲染失败会记录错误日志
+//   - 面板内容会根据环境（生产/开发）进行不同的处理
 func (base *BaseAdapter) GetContent(ctx interface{}, getPanelFn types.GetPanelFn, wf WebFrameWork,
 	navButtons types.Buttons, fn context.NodeProcessor) {
 
-	// 步骤1: 初始化上下文并获取认证cookie
-	// SetContext将Web框架的上下文设置到适配器中，便于后续操作
-	// GetCookie从请求中提取认证cookie，用于验证用户身份
+	// 设置上下文到适配器，并获取Cookie
 	var (
 		newBase          = wf.SetContext(ctx)
 		cookie, hasError = newBase.GetCookie()
 	)
 
-	// 步骤2: 验证cookie是否存在
-	// 如果获取cookie失败或cookie为空，说明用户未登录，重定向到登录页
+	// 如果获取Cookie失败或Cookie为空，重定向到登录页
 	if hasError != nil || cookie == "" {
 		newBase.Redirect()
 		return
 	}
 
-	// 步骤3: 使用cookie从数据库获取用户信息
-	// GetCurUser通过cookie查询用户表，返回用户模型和认证状态
+	// 使用Cookie验证用户身份并获取用户信息
 	user, authSuccess := auth.GetCurUser(cookie, wf.GetConnection())
 
-	// 步骤4: 检查用户认证是否成功
-	// 如果认证失败，重定向到登录页
+	// 如果验证失败，重定向到登录页
 	if !authSuccess {
 		newBase.Redirect()
 		return
 	}
 
-	// 步骤5: 准备面板和错误变量
+	// 准备获取面板内容
 	var (
 		panel types.Panel
 		err   error
 	)
 
-	// 步骤6: 创建GoAdmin上下文
-	// NewContext封装原始HTTP请求，提供便捷的请求处理方法
+	// 创建GoAdmin上下文
 	gctx := context.NewContext(newBase.Request())
 
-	// 步骤7: 检查用户权限
-	// CheckPermissions验证用户是否有权访问当前路径和方法
-	// 参数包括: 用户模型、请求路径、HTTP方法、表单参数
+	// 检查用户权限
+	// auth.CheckPermissions会检查用户是否有权访问当前路径和方法
 	if !auth.CheckPermissions(user, newBase.Path(), newBase.Method(), newBase.FormParam()) {
 		// 权限不足，显示403错误页面
 		panel = template.WarningPanel(gctx, errors.NoPermission, template.NoPermission403Page)
 	} else {
-		// 权限验证通过，调用getPanelFn生成面板内容
+		// 权限足够，调用getPanelFn获取面板内容
 		panel, err = getPanelFn(ctx)
-		// 如果生成面板时出错，显示错误信息面板
+		// 如果获取面板失败，显示错误页面
 		if err != nil {
 			panel = template.WarningPanel(gctx, err.Error())
 		}
 	}
 
-	// 步骤8: 执行面板回调函数
-	// Callbacks是面板中定义的回调函数列表，用于处理异步操作
+	// 执行面板的回调函数
+	// 这些回调可能包含一些需要在渲染前执行的逻辑
 	fn(panel.Callbacks...)
 
-	// 步骤9: 获取模板
-	// 根据是否为PJAX请求选择不同的模板
-	// PJAX请求使用简化模板，普通请求使用完整模板
+	// 获取模板（根据是否为PJAX请求）
+	// PJAX请求只返回面板内容，不返回完整页面
 	tmpl, tmplName := template.Default(gctx).GetTemplate(newBase.IsPjax())
 
-	// 步骤10: 准备模板渲染缓冲区
-	// 使用bytes.Buffer避免频繁的内存分配
+	// 创建缓冲区用于存储渲染后的HTML
 	buf := new(bytes.Buffer)
 
-	// 步骤11: 执行模板渲染
-	// NewPage创建页面数据结构，包含以下关键信息:
-	//   - User: 当前登录用户信息
-	//   - Menu: 全局菜单，根据用户权限动态生成，并设置当前激活项
-	//   - Panel: 面板内容，根据环境决定是否压缩
-	//   - Assets: 前端资源（CSS/JS）的导入HTML
-	//   - Buttons: 导航按钮，根据用户权限过滤
-	//   - TmplHeadHTML: 自定义头部HTML
-	//   - TmplFootJS: 自定义底部JavaScript
-	//   - Iframe: 判断是否在iframe中显示
+	// 渲染模板
+	// types.NewPage创建页面参数，包含用户、菜单、面板等信息
 	hasError = tmpl.ExecuteTemplate(buf, tmplName, types.NewPage(gctx, &types.NewPageParam{
-		User:         user,
-		Menu:         menu.GetGlobalMenu(user, wf.GetConnection(), newBase.Lang()).SetActiveClass(config.URLRemovePrefix(newBase.Path())),
-		Panel:        panel.GetContent(config.IsProductionEnvironment()),
-		Assets:       template.GetComponentAssetImportHTML(gctx),
-		Buttons:      navButtons.CheckPermission(user),
-		TmplHeadHTML: template.Default(gctx).GetHeadHTML(),
-		TmplFootJS:   template.Default(gctx).GetFootJS(),
-		Iframe:       newBase.Query().Get(constant.IframeKey) == "true",
+		User:         user,                                                                                                                // 当前用户
+		Menu:         menu.GetGlobalMenu(user, wf.GetConnection(), newBase.Lang()).SetActiveClass(config.URLRemovePrefix(newBase.Path())), // 全局菜单，并设置当前激活的菜单项
+		Panel:        panel.GetContent(config.IsProductionEnvironment()),                                                                  // 面板内容，根据环境处理
+		Assets:       template.GetComponentAssetImportHTML(gctx),                                                                          // 资源文件（CSS、JS等）
+		Buttons:      navButtons.CheckPermission(user),                                                                                    // 导航按钮，根据用户权限过滤
+		TmplHeadHTML: template.Default(gctx).GetHeadHTML(),                                                                                // 模板头部HTML
+		TmplFootJS:   template.Default(gctx).GetFootJS(),                                                                                  // 模板底部JS
+		Iframe:       newBase.Query().Get(constant.IframeKey) == "true",                                                                   // 是否在iframe中显示
 	}))
 
-	// 步骤12: 处理模板渲染错误
-	// 如果渲染失败，记录错误日志
+	// 如果模板渲染失败，记录错误日志
 	if hasError != nil {
 		logger.Error(fmt.Sprintf("error: %s adapter content, ", newBase.Name()), hasError)
 	}
 
-	// 步骤13: 设置响应Content-Type头部
-	// 必须在写入响应体之前调用
+	// 设置响应的Content-Type
 	newBase.SetContentType()
 
-	// 步骤14: 将渲染后的HTML写入响应
+	// 将渲染后的HTML写入响应
 	newBase.Write(buf.Bytes())
 }

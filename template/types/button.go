@@ -10,51 +10,83 @@ import (
 	"github.com/purpose168/GoAdmin/plugins/admin/models"
 )
 
+// Button 接口定义了按钮的基本行为
 type Button interface {
+	// Content 返回按钮的HTML内容和JavaScript代码
 	Content(ctx *context.Context) (template.HTML, template.JS)
+	// GetAction 获取按钮的动作
 	GetAction() Action
+	// URL 返回按钮的URL
 	URL() string
+	// METHOD 返回按钮的HTTP方法
 	METHOD() string
+	// ID 返回按钮的ID
 	ID() string
+	// Type 返回按钮的类型
 	Type() string
+	// GetName 返回按钮的名称
 	GetName() string
+	// SetName 设置按钮的名称
 	SetName(name string)
+	// IsType 检查按钮是否为指定类型
 	IsType(t string) bool
 }
 
+// BaseButton 是按钮的基础结构体
 type BaseButton struct {
-	Id, Url, Method, Name, TypeName string
-	Title                           template.HTML
-	Action                          Action
+	Id, Url, Method, Name, TypeName string        // 按钮ID、URL、方法、名称和类型名称
+	Title                           template.HTML // 按钮标题
+	Action                          Action        // 按钮动作
 }
 
+// Content 返回空内容
 func (b *BaseButton) Content() (template.HTML, template.JS) { return "", "" }
-func (b *BaseButton) GetAction() Action                     { return b.Action }
-func (b *BaseButton) ID() string                            { return b.Id }
-func (b *BaseButton) URL() string                           { return b.Url }
-func (b *BaseButton) Type() string                          { return b.TypeName }
-func (b *BaseButton) IsType(t string) bool                  { return b.TypeName == t }
-func (b *BaseButton) METHOD() string                        { return b.Method }
-func (b *BaseButton) GetName() string                       { return b.Name }
-func (b *BaseButton) SetName(name string)                   { b.Name = name }
 
+// GetAction 返回按钮动作
+func (b *BaseButton) GetAction() Action { return b.Action }
+
+// ID 返回按钮ID
+func (b *BaseButton) ID() string { return b.Id }
+
+// URL 返回按钮URL
+func (b *BaseButton) URL() string { return b.Url }
+
+// Type 返回按钮类型
+func (b *BaseButton) Type() string { return b.TypeName }
+
+// IsType 检查按钮是否为指定类型
+func (b *BaseButton) IsType(t string) bool { return b.TypeName == t }
+
+// METHOD 返回HTTP方法
+func (b *BaseButton) METHOD() string { return b.Method }
+
+// GetName 返回按钮名称
+func (b *BaseButton) GetName() string { return b.Name }
+
+// SetName 设置按钮名称
+func (b *BaseButton) SetName(name string) { b.Name = name }
+
+// DefaultButton 是默认按钮结构体
 type DefaultButton struct {
 	*BaseButton
-	Color     template.HTML
-	TextColor template.HTML
-	Icon      string
-	Direction template.HTML
-	Group     bool
+	Color     template.HTML // 按钮背景色
+	TextColor template.HTML // 按钮文字颜色
+	Icon      string        // 按钮图标
+	Direction template.HTML // 按钮方向
+	Group     bool          // 是否为按钮组
 }
 
+// GetDefaultButton 创建默认按钮
 func GetDefaultButton(title template.HTML, icon string, action Action, colors ...template.HTML) *DefaultButton {
 	return defaultButton(title, "right", icon, action, false, colors...)
 }
 
+// GetDefaultButtonGroup 创建默认按钮组
 func GetDefaultButtonGroup(title template.HTML, icon string, action Action, colors ...template.HTML) *DefaultButton {
 	return defaultButton(title, "right", icon, action, true, colors...)
 }
 
+// defaultButton 创建默认按钮的内部函数
 func defaultButton(title, direction template.HTML, icon string, action Action, group bool, colors ...template.HTML) *DefaultButton {
 	id := btnUUID()
 	action.SetBtnId("." + id)
@@ -83,10 +115,12 @@ func defaultButton(title, direction template.HTML, icon string, action Action, g
 	}
 }
 
+// GetColumnButton 创建列按钮
 func GetColumnButton(title template.HTML, icon string, action Action, colors ...template.HTML) *DefaultButton {
 	return defaultButton(title, "", icon, action, true, colors...)
 }
 
+// Content 生成按钮的HTML内容和JavaScript代码
 func (b *DefaultButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 
 	color := template.HTML("")
@@ -119,10 +153,12 @@ func (b *DefaultButton) Content(ctx *context.Context) (template.HTML, template.J
 	return h + b.Action.ExtContent(ctx), b.Action.Js()
 }
 
+// ActionButton 是动作按钮结构体
 type ActionButton struct {
 	*BaseButton
 }
 
+// GetActionButton 创建动作按钮
 func GetActionButton(title template.HTML, action Action, ids ...string) *ActionButton {
 
 	id := ""
@@ -146,17 +182,20 @@ func GetActionButton(title template.HTML, action Action, ids ...string) *ActionB
 	}
 }
 
+// Content 生成动作按钮的HTML内容和JavaScript代码
 func (b *ActionButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 	h := template.HTML(`<li style="cursor: pointer;"><a data-id="{{.Id}}" class="`+template.HTML(b.Id)+` `+
 		b.Action.BtnClass()+`" `+b.Action.BtnAttribute()+`>`+b.Title+`</a></li>`) + b.Action.ExtContent(ctx)
 	return h, b.Action.Js()
 }
 
+// ActionIconButton 是动作图标按钮结构体
 type ActionIconButton struct {
-	Icon template.HTML
+	Icon template.HTML // 图标
 	*BaseButton
 }
 
+// GetActionIconButton 创建动作图标按钮
 func GetActionIconButton(icon string, action Action, ids ...string) *ActionIconButton {
 
 	id := ""
@@ -180,18 +219,22 @@ func GetActionIconButton(icon string, action Action, ids ...string) *ActionIconB
 	}
 }
 
+// Content 生成动作图标按钮的HTML内容和JavaScript代码
 func (b *ActionIconButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 	h := template.HTML(`<a data-id="{{.Id}}" class="`+template.HTML(b.Id)+` `+
 		b.Action.BtnClass()+`" `+b.Action.BtnAttribute()+`><i class="fa `+b.Icon+`" style="font-size: 16px;"></i></a>`) + b.Action.ExtContent(ctx)
 	return h, b.Action.Js()
 }
 
+// Buttons 是按钮切片类型
 type Buttons []Button
 
+// Add 添加按钮
 func (b Buttons) Add(btn Button) Buttons {
 	return append(b, btn)
 }
 
+// Content 生成所有按钮的HTML内容和JavaScript代码
 func (b Buttons) Content(ctx *context.Context) (template.HTML, template.JS) {
 	h := template.HTML("")
 	j := template.JS("")
@@ -204,12 +247,14 @@ func (b Buttons) Content(ctx *context.Context) (template.HTML, template.JS) {
 	return h, j
 }
 
+// Copy 复制按钮切片
 func (b Buttons) Copy() Buttons {
 	var c = make(Buttons, len(b))
 	copy(c, b)
 	return c
 }
 
+// FooterContent 生成所有按钮的页脚内容
 func (b Buttons) FooterContent(ctx *context.Context) template.HTML {
 	footer := template.HTML("")
 
@@ -219,6 +264,7 @@ func (b Buttons) FooterContent(ctx *context.Context) template.HTML {
 	return footer
 }
 
+// CheckPermission 检查用户是否有权限访问按钮
 func (b Buttons) CheckPermission(user models.UserModel) Buttons {
 	btns := make(Buttons, 0)
 	for _, btn := range b {
@@ -239,6 +285,7 @@ func (b Buttons) CheckPermission(user models.UserModel) Buttons {
 	return btns
 }
 
+// CheckPermissionWhenURLAndMethodNotEmpty 当URL和方法不为空时检查权限
 func (b Buttons) CheckPermissionWhenURLAndMethodNotEmpty(user models.UserModel) Buttons {
 	btns := make(Buttons, 0)
 	for _, b := range b {
@@ -249,6 +296,7 @@ func (b Buttons) CheckPermissionWhenURLAndMethodNotEmpty(user models.UserModel) 
 	return btns
 }
 
+// AddNavButton 添加导航按钮
 func (b Buttons) AddNavButton(ico, name string, action Action) Buttons {
 	if !b.CheckExist(name) {
 		return append(b, GetNavButton(language.GetFromHtml(template.HTML(name)), ico, action, name))
@@ -256,6 +304,7 @@ func (b Buttons) AddNavButton(ico, name string, action Action) Buttons {
 	return b
 }
 
+// RemoveButtonByName 根据名称移除按钮
 func (b Buttons) RemoveButtonByName(name string) Buttons {
 	if name == "" {
 		return b
@@ -269,6 +318,7 @@ func (b Buttons) RemoveButtonByName(name string) Buttons {
 	return b
 }
 
+// CheckExist 检查按钮是否存在
 func (b Buttons) CheckExist(name string) bool {
 	if name == "" {
 		return false
@@ -281,6 +331,7 @@ func (b Buttons) CheckExist(name string) bool {
 	return false
 }
 
+// Callbacks 获取所有按钮的回调函数
 func (b Buttons) Callbacks() []context.Node {
 	cbs := make([]context.Node, 0)
 	for _, btn := range b {
@@ -290,33 +341,39 @@ func (b Buttons) Callbacks() []context.Node {
 }
 
 const (
-	NavBtnSiteName = "site setting"
-	NavBtnInfoName = "site info"
-	NavBtnToolName = "code generate tool"
-	NavBtnPlugName = "plugins"
+	NavBtnSiteName = "site setting"       // 站点设置按钮名称
+	NavBtnInfoName = "site info"          // 站点信息按钮名称
+	NavBtnToolName = "code generate tool" // 代码生成工具按钮名称
+	NavBtnPlugName = "plugins"            // 插件按钮名称
 )
 
+// RemoveSiteNavButton 移除站点设置导航按钮
 func (b Buttons) RemoveSiteNavButton() Buttons {
 	return b.RemoveButtonByName(NavBtnSiteName)
 }
 
+// RemoveInfoNavButton 移除站点信息导航按钮
 func (b Buttons) RemoveInfoNavButton() Buttons {
 	return b.RemoveButtonByName(NavBtnInfoName)
 }
 
+// RemoveToolNavButton 移除工具导航按钮
 func (b Buttons) RemoveToolNavButton() Buttons {
 	return b.RemoveButtonByName(NavBtnToolName)
 }
 
+// RemovePlugNavButton 移除插件导航按钮
 func (b Buttons) RemovePlugNavButton() Buttons {
 	return b.RemoveButtonByName(NavBtnPlugName)
 }
 
+// NavButton 是导航按钮结构体
 type NavButton struct {
 	*BaseButton
-	Icon string
+	Icon string // 图标
 }
 
+// GetNavButton 创建导航按钮
 func GetNavButton(title template.HTML, icon string, action Action, names ...string) *NavButton {
 
 	id := btnUUID()
@@ -341,6 +398,7 @@ func GetNavButton(title template.HTML, icon string, action Action, names ...stri
 	}
 }
 
+// Content 生成导航按钮的HTML内容和JavaScript代码
 func (n *NavButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 
 	ico := template.HTML("")
@@ -363,16 +421,19 @@ func (n *NavButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 	return h, n.Action.Js()
 }
 
+// NavDropDownButton 是导航下拉按钮结构体
 type NavDropDownButton struct {
 	*BaseButton
-	Icon  string
-	Items []*NavDropDownItemButton
+	Icon  string                   // 图标
+	Items []*NavDropDownItemButton // 下拉菜单项
 }
 
+// NavDropDownItemButton 是导航下拉菜单项按钮结构体
 type NavDropDownItemButton struct {
 	*BaseButton
 }
 
+// GetDropDownButton 创建下拉按钮
 func GetDropDownButton(title template.HTML, icon string, items []*NavDropDownItemButton, names ...string) *NavDropDownButton {
 	id := btnUUID()
 	name := ""
@@ -394,14 +455,17 @@ func GetDropDownButton(title template.HTML, icon string, items []*NavDropDownIte
 	}
 }
 
+// SetItems 设置下拉菜单项
 func (n *NavDropDownButton) SetItems(items []*NavDropDownItemButton) {
 	n.Items = items
 }
 
+// AddItem 添加下拉菜单项
 func (n *NavDropDownButton) AddItem(item *NavDropDownItemButton) {
 	n.Items = append(n.Items, item)
 }
 
+// Content 生成下拉按钮的HTML内容和JavaScript代码
 func (n *NavDropDownButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 
 	ico := template.HTML("")
@@ -440,10 +504,11 @@ func (n *NavDropDownButton) Content(ctx *context.Context) (template.HTML, templa
 }
 
 const (
-	ButtonTypeNavDropDownItem = "navdropdownitem"
-	ButtonTypeNavDropDown     = "navdropdown"
+	ButtonTypeNavDropDownItem = "navdropdownitem" // 导航下拉菜单项按钮类型
+	ButtonTypeNavDropDown     = "navdropdown"     // 导航下拉按钮类型
 )
 
+// GetDropDownItemButton 创建下拉菜单项按钮
 func GetDropDownItemButton(title template.HTML, action Action, names ...string) *NavDropDownItemButton {
 	id := btnUUID()
 	action.SetBtnId("." + id)
@@ -467,6 +532,7 @@ func GetDropDownItemButton(title template.HTML, action Action, names ...string) 
 	}
 }
 
+// Content 生成下拉菜单项按钮的HTML内容和JavaScript代码
 func (n *NavDropDownItemButton) Content(ctx *context.Context) (template.HTML, template.JS) {
 
 	title := template.HTML("")

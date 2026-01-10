@@ -25,23 +25,32 @@ import (
 	form2 "github.com/purpose168/GoAdmin/template/types/form"
 )
 
+// FieldOption 表示表单字段的选项配置
 type FieldOption struct {
-	Text          string            `json:"text"`
-	Value         string            `json:"value"`
-	TextHTML      template.HTML     `json:"-"`
-	Selected      bool              `json:"-"`
-	SelectedLabel template.HTML     `json:"-"`
-	Extra         map[string]string `json:"-"`
+	Text          string            `json:"text"`  // 选项显示的文本内容
+	Value         string            `json:"value"` // 选项的实际值
+	TextHTML      template.HTML     `json:"-"`     // 选项的HTML格式文本
+	Selected      bool              `json:"-"`     // 是否被选中
+	SelectedLabel template.HTML     `json:"-"`     // 选中状态的标签
+	Extra         map[string]string `json:"-"`     // 额外的属性配置
 }
 
+// FieldOptions 是 FieldOption 的切片类型，用于表示多个选项
 type FieldOptions []FieldOption
 
+// Copy 创建 FieldOptions 的副本，返回一个新的选项列表
 func (fo FieldOptions) Copy() FieldOptions {
 	newOptions := make(FieldOptions, len(fo))
 	copy(newOptions, fo)
 	return newOptions
 }
 
+// SetSelected 根据给定的值设置选项的选中状态，并设置对应的标签
+// 参数:
+//   - val: 要匹配的值，可以是字符串数组或单个值
+//   - labels: 包含两个元素的标签数组，第一个用于选中状态，第二个用于未选中状态
+//
+// 返回: 更新后的 FieldOptions
 func (fo FieldOptions) SetSelected(val interface{}, labels []template.HTML) FieldOptions {
 
 	if valArr, ok := val.([]string); ok {
@@ -75,6 +84,11 @@ func (fo FieldOptions) SetSelected(val interface{}, labels []template.HTML) Fiel
 	return fo
 }
 
+// SetSelectedLabel 为所有选项设置选中状态的标签
+// 参数:
+//   - labels: 包含两个元素的标签数组，第一个用于选中状态，第二个用于未选中状态
+//
+// 返回: 更新后的 FieldOptions
 func (fo FieldOptions) SetSelectedLabel(labels []template.HTML) FieldOptions {
 	for k := range fo {
 		if fo[k].Selected {
@@ -86,6 +100,8 @@ func (fo FieldOptions) SetSelectedLabel(labels []template.HTML) FieldOptions {
 	return fo
 }
 
+// Marshal 将 FieldOptions 序列化为 JSON 字符串
+// 返回: JSON 格式的字符串，如果选项列表为空或序列化失败则返回空字符串
 func (fo FieldOptions) Marshal() string {
 	if len(fo) == 0 {
 		return ""
@@ -99,104 +115,132 @@ func (fo FieldOptions) Marshal() string {
 	return string(eo)
 }
 
-type (
-	OptionInitFn              func(val FieldModel) FieldOptions
-	OptionArrInitFn           func(val FieldModel) []FieldOptions
-	OptionTableQueryProcessFn func(sql *db.SQL) *db.SQL
-	OptionProcessFn           func(options FieldOptions) FieldOptions
+// OptionInitFn 是选项初始化函数类型，根据字段模型生成选项列表
+type OptionInitFn func(val FieldModel) FieldOptions
 
-	OptionTable struct {
-		Table          string
-		TextField      string
-		ValueField     string
-		QueryProcessFn OptionTableQueryProcessFn
-		ProcessFn      OptionProcessFn
-	}
-)
+// OptionArrInitFn 是选项数组初始化函数类型，根据字段模型生成多个选项列表
+type OptionArrInitFn func(val FieldModel) []FieldOptions
 
-// FormField is the form field with different options.
-type FormField struct {
-	Field          string          `json:"field"`
-	FieldClass     string          `json:"field_class"`
-	TypeName       db.DatabaseType `json:"type_name"`
-	Head           string          `json:"head"`
-	Foot           template.HTML   `json:"foot"`
-	FormType       form2.Type      `json:"form_type"`
-	FatherFormType form2.Type      `json:"father_form_type"`
-	FatherField    string          `json:"father_field"`
+// OptionTableQueryProcessFn 是表查询处理函数类型，用于处理 SQL 查询
+type OptionTableQueryProcessFn func(sql *db.SQL) *db.SQL
 
-	RowWidth int
-	RowFlag  uint8
+// OptionProcessFn 是选项处理函数类型，用于对选项进行自定义处理
+type OptionProcessFn func(options FieldOptions) FieldOptions
 
-	Default                template.HTML  `json:"default"`
-	DefaultArr             interface{}    `json:"default_arr"`
-	Value                  template.HTML  `json:"value"`
-	Value2                 string         `json:"value_2"`
-	ValueArr               []string       `json:"value_arr"`
-	Value2Arr              []string       `json:"value_2_arr"`
-	Options                FieldOptions   `json:"options"`
-	OptionsArr             []FieldOptions `json:"options_arr"`
-	DefaultOptionDelimiter string         `json:"default_option_delimiter"`
-	Label                  template.HTML  `json:"label"`
-	HideLabel              bool           `json:"hide_label"`
-
-	Placeholder string `json:"placeholder"`
-
-	CustomContent template.HTML `json:"custom_content"`
-	CustomJs      template.JS   `json:"custom_js"`
-	CustomCss     template.CSS  `json:"custom_css"`
-
-	Editable         bool `json:"editable"`
-	NotAllowEdit     bool `json:"not_allow_edit"`
-	NotAllowAdd      bool `json:"not_allow_add"`
-	DisplayButNotAdd bool `json:"display_but_not_add"`
-	Must             bool `json:"must"`
-	Hide             bool `json:"hide"`
-	CreateHide       bool `json:"create_hide"`
-	EditHide         bool `json:"edit_hide"`
-
-	Width int `json:"width"`
-
-	InputWidth int `json:"input_width"`
-	HeadWidth  int `json:"head_width"`
-
-	Joins Joins `json:"-"`
-
-	Divider      bool   `json:"divider"`
-	DividerTitle string `json:"divider_title"`
-
-	HelpMsg template.HTML `json:"help_msg"`
-
-	TableFields FormFields
-
-	Style  template.HTMLAttr `json:"style"`
-	NoIcon bool              `json:"no_icon"`
-
-	OptionExt       template.JS     `json:"option_ext"`
-	OptionExt2      template.JS     `json:"option_ext_2"`
-	OptionInitFn    OptionInitFn    `json:"-"`
-	OptionArrInitFn OptionArrInitFn `json:"-"`
-	OptionTable     OptionTable     `json:"-"`
-
-	FieldDisplay `json:"-"`
-	PostFilterFn PostFieldFilterFn `json:"-"`
+// OptionTable 定义了从数据库表中获取选项的配置
+type OptionTable struct {
+	Table          string                    // 数据库表名
+	TextField      string                    // 用于显示文本的字段名
+	ValueField     string                    // 用于值的字段名
+	QueryProcessFn OptionTableQueryProcessFn // 查询处理函数
+	ProcessFn      OptionProcessFn           // 选项处理函数
 }
 
+// FormField 是表单字段结构体，包含字段的各种配置选项
+type FormField struct {
+	Field          string          `json:"field"`            // 字段名称
+	FieldClass     string          `json:"field_class"`      // 字段CSS类名
+	TypeName       db.DatabaseType `json:"type_name"`        // 数据库类型
+	Head           string          `json:"head"`             // 字段标题
+	Foot           template.HTML   `json:"foot"`             // 字段底部内容
+	FormType       form2.Type      `json:"form_type"`        // 表单类型
+	FatherFormType form2.Type      `json:"father_form_type"` // 父表单类型
+	FatherField    string          `json:"father_field"`     // 父字段名称
+
+	RowWidth int   // 行宽度
+	RowFlag  uint8 // 行标志位
+
+	Default                template.HTML  `json:"default"`                  // 默认值
+	DefaultArr             interface{}    `json:"default_arr"`              // 默认值数组
+	Value                  template.HTML  `json:"value"`                    // 字段值
+	Value2                 string         `json:"value_2"`                  // 第二个值（用于文件上传等场景）
+	ValueArr               []string       `json:"value_arr"`                // 值数组
+	Value2Arr              []string       `json:"value_2_arr"`              // 第二个值数组
+	Options                FieldOptions   `json:"options"`                  // 选项列表
+	OptionsArr             []FieldOptions `json:"options_arr"`              // 选项数组列表
+	DefaultOptionDelimiter string         `json:"default_option_delimiter"` // 默认选项分隔符
+	Label                  template.HTML  `json:"label"`                    // 标签
+	HideLabel              bool           `json:"hide_label"`               // 是否隐藏标签
+
+	Placeholder string `json:"placeholder"` // 占位符文本
+
+	CustomContent template.HTML `json:"custom_content"` // 自定义内容
+	CustomJs      template.JS   `json:"custom_js"`      // 自定义JavaScript
+	CustomCss     template.CSS  `json:"custom_css"`     // 自定义CSS样式
+
+	Editable         bool `json:"editable"`            // 是否可编辑
+	NotAllowEdit     bool `json:"not_allow_edit"`      // 是否不允许编辑
+	NotAllowAdd      bool `json:"not_allow_add"`       // 是否不允许添加
+	DisplayButNotAdd bool `json:"display_but_not_add"` // 是否显示但不允许添加
+	Must             bool `json:"must"`                // 是否必填
+	Hide             bool `json:"hide"`                // 是否隐藏
+	CreateHide       bool `json:"create_hide"`         // 创建时是否隐藏
+	EditHide         bool `json:"edit_hide"`           // 编辑时是否隐藏
+
+	Width int `json:"width"` // 字段宽度
+
+	InputWidth int `json:"input_width"` // 输入框宽度
+	HeadWidth  int `json:"head_width"`  // 标题宽度
+
+	Joins Joins `json:"-"` // 关联配置
+
+	Divider      bool   `json:"divider"`       // 是否显示分隔线
+	DividerTitle string `json:"divider_title"` // 分隔线标题
+
+	HelpMsg template.HTML `json:"help_msg"` // 帮助信息
+
+	TableFields FormFields // 表字段列表
+
+	Style  template.HTMLAttr `json:"style"`   // 样式属性
+	NoIcon bool              `json:"no_icon"` // 是否不显示图标
+
+	OptionExt       template.JS     `json:"option_ext"`   // 选项扩展配置（JSON格式）
+	OptionExt2      template.JS     `json:"option_ext_2"` // 选项扩展配置2（JSON格式）
+	OptionInitFn    OptionInitFn    `json:"-"`            // 选项初始化函数
+	OptionArrInitFn OptionArrInitFn `json:"-"`            // 选项数组初始化函数
+	OptionTable     OptionTable     `json:"-"`            // 选项表配置
+
+	FieldDisplay `json:"-"`        // 字段显示配置
+	PostFilterFn PostFieldFilterFn `json:"-"` // 后置过滤函数
+}
+
+// GetRawValue 从给定的值中获取原始值
+// 参数:
+//   - columns: 列名数组
+//   - v: 值对象
+//
+// 返回: 原始字符串值
 func (f *FormField) GetRawValue(columns []string, v interface{}) string {
 	isJSON := len(columns) == 0
 	return modules.AorB(isJSON || modules.InArray(columns, f.Field),
 		db.GetValueFromDatabaseType(f.TypeName, v, isJSON).String(), "")
 }
 
+// UpdateValue 更新字段值
+// 参数:
+//   - id: 记录ID
+//   - val: 新值
+//   - res: 结果映射
+//   - sql: SQL对象
+//
+// 返回: 更新后的 FormField 指针
 func (f *FormField) UpdateValue(id, val string, res map[string]interface{}, sql *db.SQL) *FormField {
 	return f.updateValue(id, val, res, PostTypeUpdate, sql)
 }
 
+// UpdateDefaultValue 更新字段默认值
+// 参数:
+//   - sql: SQL对象
+//
+// 返回: 更新后的 FormField 指针
 func (f *FormField) UpdateDefaultValue(sql *db.SQL) *FormField {
 	f.Value = f.Default
 	return f.updateValue("", string(f.Value), make(map[string]interface{}), PostTypeCreate, sql)
 }
 
+// setOptionsFromSQL 从数据库SQL查询结果中设置选项
+// 参数:
+//   - sql: SQL对象，用于执行查询
 func (f *FormField) setOptionsFromSQL(sql *db.SQL) {
 	if sql != nil && f.OptionTable.Table != "" && len(f.Options) == 0 {
 
@@ -222,18 +266,33 @@ func (f *FormField) setOptionsFromSQL(sql *db.SQL) {
 	}
 }
 
+// isBelongToATable 判断字段是否属于表格类型
+// 返回: 如果字段属于表格类型返回true，否则返回false
 func (f *FormField) isBelongToATable() bool {
 	return f.FatherField != "" && f.FatherFormType.IsTable()
 }
 
+// isNotBelongToATable 判断字段是否不属于表格类型
+// 返回: 如果字段不属于表格类型返回true，否则返回false
 func (f *FormField) isNotBelongToATable() bool {
 	return f.FatherField == "" && !f.FatherFormType.IsTable()
 }
 
+// allowAdd 判断字段是否允许添加
+// 返回: 如果允许添加返回true，否则返回false
 func (f *FormField) allowAdd() bool {
 	return !f.NotAllowAdd
 }
 
+// updateValue 内部方法，根据类型更新字段值
+// 参数:
+//   - id: 记录ID
+//   - val: 新值
+//   - res: 结果映射
+//   - typ: 提交类型（创建或更新）
+//   - sql: SQL对象
+//
+// 返回: 更新后的 FormField 指针
 func (f *FormField) updateValue(id, val string, res map[string]interface{}, typ PostType, sql *db.SQL) *FormField {
 
 	m := FieldModel{
@@ -294,8 +353,10 @@ func (f *FormField) updateValue(id, val string, res map[string]interface{}, typ 
 	return f
 }
 
+// FillCustomContent 填充自定义内容，包括自定义HTML、JavaScript和CSS
+// 返回: 更新后的 FormField 指针
 func (f *FormField) FillCustomContent() *FormField {
-	// TODO: optimize
+	// TODO: 优化性能
 	if f.CustomContent != "" {
 		f.CustomContent = template.HTML(f.fillCustom(string(f.CustomContent)))
 	}
@@ -308,6 +369,11 @@ func (f *FormField) FillCustomContent() *FormField {
 	return f
 }
 
+// fillCustom 使用模板引擎填充自定义内容
+// 参数:
+//   - src: 模板源字符串
+//
+// 返回: 填充后的字符串
 func (f *FormField) fillCustom(src string) string {
 	t := template.New("custom")
 	t, err := t.Parse(src)
@@ -324,158 +390,224 @@ func (f *FormField) fillCustom(src string) string {
 	return buf.String()
 }
 
-// FormPanel
+// FormPanel 是表单面板结构体，用于管理表单的所有配置和字段
 type FormPanel struct {
-	FieldList         FormFields `json:"field_list"`
-	curFieldListIndex int
+	FieldList         FormFields `json:"field_list"` // 字段列表
+	curFieldListIndex int        // 当前字段列表索引
 
-	// Warn: may be deprecated in the future. `json:""
-	TabGroups  TabGroups  `json:"tab_groups"`
-	TabHeaders TabHeaders `json:"tab_headers"`
+	// 警告: 将来可能会被弃用 `json:""`
+	TabGroups  TabGroups  `json:"tab_groups"`  // 标签组
+	TabHeaders TabHeaders `json:"tab_headers"` // 标签头
 
-	Table       string `json:"table"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Table       string `json:"table"`       // 数据库表名
+	Title       string `json:"title"`       // 表单标题
+	Description string `json:"description"` // 表单描述
 
-	Validator    FormPostFn       `json:"validator"`
-	PostHook     FormPostFn       `json:"post_hook"`
-	PreProcessFn FormPreProcessFn `json:"pre_process_fn"`
+	Validator    FormPostFn       `json:"validator"`      // 验证函数
+	PostHook     FormPostFn       `json:"post_hook"`      // 提交后钩子函数
+	PreProcessFn FormPreProcessFn `json:"pre_process_fn"` // 预处理函数
 
-	Callbacks Callbacks `json:"callbacks"`
+	Callbacks Callbacks `json:"callbacks"` // 回调函数列表
 
-	primaryKey primaryKey
+	primaryKey primaryKey // 主键配置
 
-	UpdateFn FormPostFn `json:"update_fn"`
-	InsertFn FormPostFn `json:"insert_fn"`
+	UpdateFn FormPostFn `json:"update_fn"` // 更新函数
+	InsertFn FormPostFn `json:"insert_fn"` // 插入函数
 
-	IsHideContinueEditCheckBox bool `json:"is_hide_continue_edit_check_box"`
-	IsHideContinueNewCheckBox  bool `json:"is_hide_continue_new_check_box"`
-	IsHideResetButton          bool `json:"is_hide_reset_button"`
-	IsHideBackButton           bool `json:"is_hide_back_button"`
+	IsHideContinueEditCheckBox bool `json:"is_hide_continue_edit_check_box"` // 是否隐藏继续编辑复选框
+	IsHideContinueNewCheckBox  bool `json:"is_hide_continue_new_check_box"`  // 是否隐藏继续新建复选框
+	IsHideResetButton          bool `json:"is_hide_reset_button"`            // 是否隐藏重置按钮
+	IsHideBackButton           bool `json:"is_hide_back_button"`             // 是否隐藏返回按钮
 
-	Layout form2.Layout `json:"layout"`
+	Layout form2.Layout `json:"layout"` // 布局类型
 
-	HTMLContent template.HTML `json:"html_content"`
+	HTMLContent template.HTML `json:"html_content"` // HTML内容
 
-	Header template.HTML `json:"header"`
+	Header template.HTML `json:"header"` // 头部内容
 
-	InputWidth int `json:"input_width"`
-	HeadWidth  int `json:"head_width"`
+	InputWidth int `json:"input_width"` // 输入框宽度
+	HeadWidth  int `json:"head_width"`  // 标题宽度
 
-	FormNewTitle    template.HTML `json:"form_new_title"`
-	FormNewBtnWord  template.HTML `json:"form_new_btn_word"`
-	FormEditTitle   template.HTML `json:"form_edit_title"`
-	FormEditBtnWord template.HTML `json:"form_edit_btn_word"`
+	FormNewTitle    template.HTML `json:"form_new_title"`     // 新建表单标题
+	FormNewBtnWord  template.HTML `json:"form_new_btn_word"`  // 新建按钮文字
+	FormEditTitle   template.HTML `json:"form_edit_title"`    // 编辑表单标题
+	FormEditBtnWord template.HTML `json:"form_edit_btn_word"` // 编辑按钮文字
 
-	Ajax          bool        `json:"ajax"`
-	AjaxSuccessJS template.JS `json:"ajax_success_js"`
-	AjaxErrorJS   template.JS `json:"ajax_error_js"`
+	Ajax          bool        `json:"ajax"`            // 是否使用Ajax提交
+	AjaxSuccessJS template.JS `json:"ajax_success_js"` // Ajax成功回调JavaScript
+	AjaxErrorJS   template.JS `json:"ajax_error_js"`   // Ajax错误回调JavaScript
 
-	Responder Responder `json:"responder"`
+	Responder Responder `json:"responder"` // 响应处理函数
 
-	Wrapper ContentWrapper `json:"wrapper"`
+	Wrapper ContentWrapper `json:"wrapper"` // 内容包装器
 
-	HideSideBar bool `json:"hide_side_bar"`
+	HideSideBar bool `json:"hide_side_bar"` // 是否隐藏侧边栏
 
-	processChains DisplayProcessFnChains
+	processChains DisplayProcessFnChains // 显示处理函数链
 
-	HeaderHtml template.HTML `json:"header_html"`
-	FooterHtml template.HTML `json:"footer_html"`
+	HeaderHtml template.HTML `json:"header_html"` // 头部HTML
+	FooterHtml template.HTML `json:"footer_html"` // 底部HTML
 
-	PageError     errors.PageError `json:"page_error"`
-	PageErrorHTML template.HTML    `json:"page_error_html"`
+	PageError     errors.PageError `json:"page_error"`      // 页面错误
+	PageErrorHTML template.HTML    `json:"page_error_html"` // 页面错误HTML
 
-	NoCompress bool `json:"no_compress"`
+	NoCompress bool `json:"no_compress"` // 是否不压缩
 }
 
+// Responder 是响应处理函数类型
 type Responder func(ctx *context.Context)
 
+// NewFormPanel 创建一个新的表单面板实例
+// 返回: 初始化后的 FormPanel 指针
 func NewFormPanel() *FormPanel {
 	return &FormPanel{
 		curFieldListIndex: -1,
 		Callbacks:         make(Callbacks, 0),
 		Layout:            form2.LayoutDefault,
-		FormNewTitle:      "New",
-		FormEditTitle:     "Edit",
-		FormNewBtnWord:    language.GetFromHtml("Save"),
-		FormEditBtnWord:   language.GetFromHtml("Save"),
+		FormNewTitle:      "新建",
+		FormEditTitle:     "编辑",
+		FormNewBtnWord:    language.GetFromHtml("保存"),
+		FormEditBtnWord:   language.GetFromHtml("保存"),
 	}
 }
 
+// AddLimitFilter 添加长度限制过滤器
+// 参数:
+//   - limit: 最大长度限制
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddLimitFilter(limit int) *FormPanel {
 	f.processChains = addLimit(limit, f.processChains)
 	return f
 }
 
+// AddTrimSpaceFilter 添加去除空格过滤器
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddTrimSpaceFilter() *FormPanel {
 	f.processChains = addTrimSpace(f.processChains)
 	return f
 }
 
+// AddSubstrFilter 添加子字符串过滤器
+// 参数:
+//   - start: 起始位置
+//   - end: 结束位置
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddSubstrFilter(start int, end int) *FormPanel {
 	f.processChains = addSubstr(start, end, f.processChains)
 	return f
 }
 
+// AddToTitleFilter 添加标题转换过滤器（将字符串转为标题格式）
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddToTitleFilter() *FormPanel {
 	f.processChains = addToTitle(f.processChains)
 	return f
 }
 
+// AddToUpperFilter 添加大写转换过滤器
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddToUpperFilter() *FormPanel {
 	f.processChains = addToUpper(f.processChains)
 	return f
 }
 
+// AddToLowerFilter 添加小写转换过滤器
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddToLowerFilter() *FormPanel {
 	f.processChains = addToLower(f.processChains)
 	return f
 }
 
+// AddXssFilter 添加XSS过滤器
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddXssFilter() *FormPanel {
 	f.processChains = addXssFilter(f.processChains)
 	return f
 }
 
+// AddXssJsFilter 添加JavaScript XSS过滤器
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddXssJsFilter() *FormPanel {
 	f.processChains = addXssJsFilter(f.processChains)
 	return f
 }
 
+// SetPrimaryKey 设置主键
+// 参数:
+//   - name: 主键字段名
+//   - typ: 数据库类型
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) SetPrimaryKey(name string, typ db.DatabaseType) *FormPanel {
 	f.primaryKey = primaryKey{Name: name, Type: typ}
 	return f
 }
 
+// HideContinueEditCheckBox 隐藏继续编辑复选框
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) HideContinueEditCheckBox() *FormPanel {
 	f.IsHideContinueEditCheckBox = true
 	return f
 }
 
+// HideContinueNewCheckBox 隐藏继续新建复选框
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) HideContinueNewCheckBox() *FormPanel {
 	f.IsHideContinueNewCheckBox = true
 	return f
 }
 
+// HideResetButton 隐藏重置按钮
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) HideResetButton() *FormPanel {
 	f.IsHideResetButton = true
 	return f
 }
 
+// HideBackButton 隐藏返回按钮
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) HideBackButton() *FormPanel {
 	f.IsHideBackButton = true
 	return f
 }
 
+// AddFieldTr 添加带翻译的字段（AddFieldWithTranslation的别名）
+// 参数:
+//   - ctx: 上下文对象
+//   - head: 字段标题
+//   - field: 字段名
+//   - filedType: 数据库类型
+//   - formType: 表单类型
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddFieldTr(ctx *context.Context, head, field string, filedType db.DatabaseType, formType form2.Type) *FormPanel {
 	return f.AddFieldWithTranslation(ctx, head, field, filedType, formType)
 }
 
+// AddFieldWithTranslation 添加带翻译的字段
+// 参数:
+//   - ctx: 上下文对象
+//   - head: 字段标题
+//   - field: 字段名
+//   - filedType: 数据库类型
+//   - formType: 表单类型
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddFieldWithTranslation(ctx *context.Context, head, field string, filedType db.DatabaseType,
 	formType form2.Type) *FormPanel {
 	return f.AddField(language.GetWithLang(head, ctx.Lang()), field, filedType, formType)
 }
 
+// AddField 添加一个字段到表单
+// 参数:
+//   - head: 字段标题
+//   - field: 字段名
+//   - filedType: 数据库类型
+//   - formType: 表单类型
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddField(head, field string, filedType db.DatabaseType, formType form2.Type) *FormPanel {
 
 	f.FieldList = append(f.FieldList, FormField{
@@ -497,13 +629,13 @@ func (f *FormPanel) AddField(head, field string, filedType db.DatabaseType, form
 	})
 	f.curFieldListIndex++
 
-	// Set default options of different form type
+	// 设置不同表单类型的默认选项
 	op1, op2, js := formType.GetDefaultOptions(field)
 	f.FieldOptionExt(op1)
 	f.FieldOptionExt2(op2)
 	f.FieldOptionExtJS(js)
 
-	// Set default Display Filter Function of different form type
+	// 设置不同表单类型的默认显示过滤函数
 	setDefaultDisplayFnOfFormType(f, formType)
 
 	if formType.IsEditor() {
@@ -513,8 +645,16 @@ func (f *FormPanel) AddField(head, field string, filedType db.DatabaseType, form
 	return f
 }
 
+// AddFormFieldFn 是添加表单字段的函数类型
 type AddFormFieldFn func(panel *FormPanel)
 
+// AddTable 添加一个表格类型的字段
+// 参数:
+//   - head: 字段标题
+//   - field: 字段名
+//   - addFields: 添加字段的函数
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddTable(head, field string, addFields AddFormFieldFn) *FormPanel {
 	index := f.curFieldListIndex
 	addFields(f)
@@ -544,6 +684,11 @@ func (f *FormPanel) AddTable(head, field string, addFields AddFormFieldFn) *Form
 	return f
 }
 
+// AddRow 添加一行字段
+// 参数:
+//   - addFields: 添加字段的函数
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) AddRow(addFields AddFormFieldFn) *FormPanel {
 	index := f.curFieldListIndex
 	addFields(f)
@@ -561,64 +706,115 @@ func (f *FormPanel) AddRow(addFields AddFormFieldFn) *FormPanel {
 	return f
 }
 
-// Field attribute setting functions
+// 字段属性设置函数
 // ====================================================
 
+// FieldDisplay 设置字段显示函数
+// 参数:
+//   - filter: 字段过滤函数
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldDisplay(filter FieldFilterFn) *FormPanel {
 	f.FieldList[f.curFieldListIndex].Display = filter
 	return f
 }
 
+// SetTable 设置数据库表名
+// 参数:
+//   - table: 表名
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) SetTable(table string) *FormPanel {
 	f.Table = table
 	return f
 }
 
+// FieldMust 设置当前字段为必填字段
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldMust() *FormPanel {
 	f.FieldList[f.curFieldListIndex].Must = true
 	return f
 }
 
+// FieldHide 隐藏当前字段
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldHide() *FormPanel {
 	f.FieldList[f.curFieldListIndex].Hide = true
 	return f
 }
 
+// FieldPlaceholder 设置当前字段的占位符文本
+// 参数:
+//   - placeholder: 占位符文本
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldPlaceholder(placeholder string) *FormPanel {
 	f.FieldList[f.curFieldListIndex].Placeholder = placeholder
 	return f
 }
 
+// FieldWidth 设置当前字段的宽度
+// 参数:
+//   - width: 宽度值
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldWidth(width int) *FormPanel {
 	f.FieldList[f.curFieldListIndex].Width = width
 	return f
 }
 
+// FieldInputWidth 设置当前字段输入框的宽度
+// 参数:
+//   - width: 输入框宽度值
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldInputWidth(width int) *FormPanel {
 	f.FieldList[f.curFieldListIndex].InputWidth = width
 	return f
 }
 
+// FieldHeadWidth 设置当前字段标题的宽度
+// 参数:
+//   - width: 标题宽度值
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldHeadWidth(width int) *FormPanel {
 	f.FieldList[f.curFieldListIndex].HeadWidth = width
 	return f
 }
 
+// FieldRowWidth 设置当前字段行的宽度
+// 参数:
+//   - width: 行宽度值
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldRowWidth(width int) *FormPanel {
 	f.FieldList[f.curFieldListIndex].RowWidth = width
 	return f
 }
 
+// FieldHideLabel 隐藏当前字段的标签
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldHideLabel() *FormPanel {
 	f.FieldList[f.curFieldListIndex].HideLabel = true
 	return f
 }
 
+// FieldFoot 设置当前字段的底部内容
+// 参数:
+//   - foot: 底部HTML内容
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldFoot(foot template.HTML) *FormPanel {
 	f.FieldList[f.curFieldListIndex].Foot = foot
 	return f
 }
 
+// FieldDivider 在当前字段后添加分隔线
+// 参数:
+//   - title: 可选的分隔线标题
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldDivider(title ...string) *FormPanel {
 	f.FieldList[f.curFieldListIndex].Divider = true
 	if len(title) > 0 {
@@ -627,17 +823,31 @@ func (f *FormPanel) FieldDivider(title ...string) *FormPanel {
 	return f
 }
 
+// FieldHelpMsg 设置当前字段的帮助信息
+// 参数:
+//   - s: 帮助信息HTML内容
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldHelpMsg(s template.HTML) *FormPanel {
 	f.FieldList[f.curFieldListIndex].HelpMsg = s
 	return f
 }
 
+// FieldOptionInitFn 设置当前字段的选项初始化函数
+// 参数:
+//   - fn: 选项初始化函数
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldOptionInitFn(fn OptionInitFn) *FormPanel {
 	f.FieldList[f.curFieldListIndex].OptionInitFn = fn
 	return f
 }
 
-// FieldOptionExt set the option extension js of the field.
+// FieldOptionExt 设置字段的选项扩展JavaScript配置
+// 参数:
+//   - m: 包含扩展配置的映射
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldOptionExt(m map[string]interface{}) *FormPanel {
 
 	if m == nil {
@@ -671,6 +881,11 @@ func (f *FormPanel) FieldOptionExt(m map[string]interface{}) *FormPanel {
 	return f
 }
 
+// FieldOptionExt2 设置字段的第二个选项扩展JavaScript配置
+// 参数:
+//   - m: 包含扩展配置的映射
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldOptionExt2(m map[string]interface{}) *FormPanel {
 
 	if m == nil {
@@ -694,6 +909,11 @@ func (f *FormPanel) FieldOptionExt2(m map[string]interface{}) *FormPanel {
 	return f
 }
 
+// FieldOptionExtJS 直接设置字段的选项扩展JavaScript
+// 参数:
+//   - js: JavaScript代码
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldOptionExtJS(js template.JS) *FormPanel {
 	if js != template.JS("") {
 		f.FieldList[f.curFieldListIndex].OptionExt = js
@@ -701,11 +921,21 @@ func (f *FormPanel) FieldOptionExtJS(js template.JS) *FormPanel {
 	return f
 }
 
+// FieldOptionExtJS2 直接设置字段的第二个选项扩展JavaScript
+// 参数:
+//   - js: JavaScript代码
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldOptionExtJS2(js template.JS) *FormPanel {
 	f.FieldList[f.curFieldListIndex].OptionExt2 = js
 	return f
 }
 
+// FieldEnableFileUpload 启用文件上传功能
+// 参数:
+//   - data: 可选参数，第一个为上传URL，第二个为文件上传处理器
+//
+// 返回: 更新后的 FormPanel 指针
 func (f *FormPanel) FieldEnableFileUpload(data ...interface{}) *FormPanel {
 
 	url := f.OperationURL("/file/upload")
@@ -717,10 +947,10 @@ func (f *FormPanel) FieldEnableFileUpload(data ...interface{}) *FormPanel {
 	field := f.FieldList[f.curFieldListIndex].Field
 
 	f.FieldList[f.curFieldListIndex].OptionExt = template.JS(fmt.Sprintf(`
-	%seditor.customConfig.uploadImgServer = '%s';
-	%seditor.customConfig.uploadImgMaxSize = 3 * 1024 * 1024;
-	%seditor.customConfig.uploadImgMaxLength = 5;
-	%seditor.customConfig.uploadFileName = 'file';
+%seditor.customConfig.uploadImgServer = '%s';
+%seditor.customConfig.uploadImgMaxSize = 3 * 1024 * 1024;
+%seditor.customConfig.uploadImgMaxLength = 5;
+%seditor.customConfig.uploadFileName = 'file';
 `, field, url, field, field, field))
 
 	var fileUploadHandler context.Handler

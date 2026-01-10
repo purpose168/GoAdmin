@@ -1,6 +1,8 @@
 {{define "choose_custom"}}
     <script>
+        // 监听Select2选择事件
         $("select.{{.Field}}").on("select2:select", function (e) {
+            // 执行自定义的JavaScript操作
             {{.JS}}
         })
     </script>

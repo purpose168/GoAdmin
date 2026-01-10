@@ -9,17 +9,28 @@ import (
 	"github.com/purpose168/GoAdmin/modules/utils"
 )
 
+// DefaultSelection 是默认选择框结构体
 type DefaultSelection struct {
-	*BaseButton
-	Options     FieldOptions
-	Placeholder string
-	Width       int
+	*BaseButton              // 基础按钮
+	Options     FieldOptions // 选项列表
+	Placeholder string       // 占位符
+	Width       int          // 宽度
 }
 
+// btnUUID 生成按钮UUID
+// 返回: 按钮UUID字符串
 func btnUUID() string {
 	return "info-btn-" + utils.Uuid(10)
 }
 
+// GetDefaultSelection 获取默认选择框
+// 参数:
+//   - placeholder: 占位符
+//   - options: 选项列表
+//   - action: 操作对象
+//   - widths: 可选的宽度
+//
+// 返回: 默认选择框对象
 func GetDefaultSelection(placeholder string, options FieldOptions, action Action, widths ...int) *DefaultSelection {
 
 	id := btnUUID()
@@ -41,9 +52,13 @@ func GetDefaultSelection(placeholder string, options FieldOptions, action Action
 		Width:       width,
 		Options:     options,
 	}
-
 }
 
+// Content 生成选择框的HTML和JavaScript
+// 参数:
+//   - ctx: 上下文对象
+//
+// 返回: HTML内容和JavaScript代码
 func (b *DefaultSelection) Content(ctx *context.Context) (template.HTML, template.JS) {
 
 	optionsHtml := `<option value='__go_admin_all__'>` + language.Get("All") + `</option>`

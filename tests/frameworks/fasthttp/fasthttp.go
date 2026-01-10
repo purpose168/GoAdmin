@@ -1,84 +1,292 @@
+// fasthttp.go - FastHTTP 框架适配器文件
+// 包名：fasthttp
+// 作者：GoAdmin 团队
+// 创建日期：2020年
+// 描述：本文件提供 GoAdmin 在 FastHTTP Web 框架下的适配器实现
+//       包含 internalHandler 和 NewHandler 两个核心函数
+//
+// 主要功能：
+//   - internalHandler: 创建内部 HTTP 请求处理器，用于测试环境
+//   - NewHandler: 创建新的 HTTP 请求处理器，支持自定义数据库和表生成器
+//
+// 核心概念：
+//   - FastHTTP: Go 语言的高性能 HTTP 服务器库
+//   - GoAdmin: Go 后台管理系统框架
+//   - 适配器模式: 将 GoAdmin 集成到不同的 Web 框架中
+//   - 插件系统: 通过插件扩展 GoAdmin 的功能
+//
+// 技术栈：
+//   - FastHTTP: Web 框架
+//   - GoAdmin Engine: 核心引擎
+//   - Admin Plugin: 管理插件
+//   - Chart.js: 图表库
+//   - AdminLTE: 主题模板
+//
+// 数据库支持：
+//   - MySQL
+//   - PostgreSQL
+//   - SQLite
+//   - MSSQL
+//
+// 使用场景：
+//   - 集成测试
+//   - 开发环境
+//   - 演示环境
+//   - 框架适配验证
+//
+// 配置说明：
+//   - URL 前缀: /admin
+//   - 存储路径: ./uploads
+//   - 语言: 英语
+//   - 主题: AdminLTE 黑色皮肤
+//
+// 注意事项：
+//   - 需要正确配置数据库连接
+//   - 需要确保上传目录存在且有写入权限
+//   - 测试环境使用 JSON 配置文件
+//   - 生产环境建议使用环境变量配置
+
 package fasthttp
 
 import (
-	// add fasthttp adapter
-	ada "github.com/purpose168/GoAdmin/adapter/fasthttp"
-	// add mysql driver
-	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"
-	// add postgresql driver
-	_ "github.com/purpose168/GoAdmin/modules/db/drivers/postgres"
-	// add sqlite driver
-	_ "github.com/purpose168/GoAdmin/modules/db/drivers/sqlite"
-	// add mssql driver
-	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mssql"
-	// add adminlte ui theme
-	"github.com/purpose168/GoAdmin-themes/adminlte"
+	"os" // Go 标准操作系统包，提供操作系统接口
 
-	"os"
+	"github.com/purpose168/GoAdmin-themes/adminlte"               // AdminLTE 主题包，提供后台管理界面主题
+	ada "github.com/purpose168/GoAdmin/adapter/fasthttp"          // FastHTTP 适配器包，提供 FastHTTP 框架适配功能
+	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mssql"    // 导入 MSSQL 数据库驱动，支持 Microsoft SQL Server 数据库连接
+	_ "github.com/purpose168/GoAdmin/modules/db/drivers/mysql"    // 导入 MySQL 数据库驱动，支持 MySQL 数据库连接
+	_ "github.com/purpose168/GoAdmin/modules/db/drivers/postgres" // 导入 PostgreSQL 数据库驱动，支持 PostgreSQL 数据库连接
+	_ "github.com/purpose168/GoAdmin/modules/db/drivers/sqlite"   // 导入 SQLite 数据库驱动，支持 SQLite 数据库连接
 
-	"github.com/buaazp/fasthttprouter"
-	"github.com/purpose168/GoAdmin/engine"
-	"github.com/purpose168/GoAdmin/modules/config"
-	"github.com/purpose168/GoAdmin/modules/language"
-	"github.com/purpose168/GoAdmin/plugins/admin"
-	"github.com/purpose168/GoAdmin/plugins/admin/modules/table"
-	"github.com/purpose168/GoAdmin/template"
-	"github.com/purpose168/GoAdmin/template/chartjs"
-	"github.com/purpose168/GoAdmin/tests/tables"
-	"github.com/valyala/fasthttp"
+	"github.com/buaazp/fasthttprouter"                          // FastHTTP 路由器包，提供 HTTP 路由功能
+	"github.com/purpose168/GoAdmin/engine"                      // GoAdmin 核心引擎包，提供框架核心功能
+	"github.com/purpose168/GoAdmin/modules/config"              // 配置模块包，提供配置管理功能
+	"github.com/purpose168/GoAdmin/modules/language"            // 语言模块包，提供多语言支持
+	"github.com/purpose168/GoAdmin/plugins/admin"               // 管理插件包，提供后台管理功能
+	"github.com/purpose168/GoAdmin/plugins/admin/modules/table" // 表格模块包，提供表格生成和管理功能
+	"github.com/purpose168/GoAdmin/template"                    // 模板包，提供模板渲染功能
+	"github.com/purpose168/GoAdmin/template/chartjs"            // Chart.js 模板包，提供图表组件
+	"github.com/purpose168/GoAdmin/tests/tables"                // 测试表格包，提供测试用的表格生成器
+	"github.com/valyala/fasthttp"                               // FastHTTP 包，提供高性能 HTTP 服务器功能
 )
 
+// ==================== 处理器函数 ====================
+
+// internalHandler 创建内部HTTP请求处理器
+// 返回值:
+//   - fasthttp.RequestHandler: FastHTTP请求处理器，用于处理HTTP请求
+//
+// 说明：
+//
+//	该函数创建一个用于测试环境的内部 HTTP 请求处理器。
+//	它使用命令行参数中的最后一个参数作为 JSON 配置文件路径。
+//
+// 功能特性：
+//   - 创建 FastHTTP 路由器实例
+//   - 初始化 GoAdmin 默认引擎
+//   - 添加管理插件并启用 XSS 过滤
+//   - 添加用户表生成器
+//   - 配置 Chart.js 图表组件
+//   - 设置自定义 HTML 内容
+//
+// 配置说明：
+//   - 配置来源: 命令行最后一个参数（JSON 文件）
+//   - HTML 路由: GET /admin
+//   - XSS 过滤: 启用
+//
+// 技术细节：
+//   - 使用 fasthttprouter.New() 创建 FastHTTP 路由器实例
+//   - 使用 engine.Default() 创建默认引擎实例
+//   - 使用 admin.NewAdmin() 创建管理插件实例
+//   - 使用 AddDisplayFilterXssJsFilter() 启用 XSS 过滤
+//   - 使用 eng.AddConfigFromJSON() 从 JSON 文件加载配置
+//   - 使用 eng.AddPlugins() 添加插件
+//   - 使用 eng.Use() 将引擎应用到 FastHTTP 路由器
+//   - 使用 template.AddComp() 添加模板组件
+//   - 使用 eng.HTML() 注册 HTML 路由
+//
+// 使用场景：
+//   - 集成测试
+//   - 单元测试
+//   - 开发环境
+//   - 演示环境
+//
+// 注意事项：
+//   - 需要在命令行参数中提供 JSON 配置文件路径
+//   - 配置文件必须包含数据库连接信息
+//   - 测试完成后需要清理测试数据
+//
+// 错误处理：
+//   - 如果配置加载失败，会触发 panic
+//   - 如果插件添加失败，会触发 panic
+//   - 如果引擎应用失败，会触发 panic
+//
+// 示例：
+//
+//	// 创建内部处理器
+//	handler := internalHandler()
+//
+//	// 使用处理器处理请求
+//	ctx := &fasthttp.RequestCtx{}
+//	ctx.Request.SetRequestURI("/admin")
+//	handler(ctx)
 func internalHandler() fasthttp.RequestHandler {
-	router := fasthttprouter.New()
+	// 创建 FastHTTP 路由器实例
+	router := fasthttprouter.New() // 创建 FastHTTP 路由器实例
 
-	eng := engine.Default()
+	// 创建 GoAdmin 默认引擎实例
+	eng := engine.Default() // 创建默认引擎实例
 
-	adminPlugin := admin.NewAdmin(tables.Generators).AddDisplayFilterXssJsFilter()
-	adminPlugin.AddGenerator("user", tables.GetUserTable)
+	// 创建管理插件实例，传入测试表格生成器，并启用 XSS 过滤
+	adminPlugin := admin.NewAdmin(tables.Generators).AddDisplayFilterXssJsFilter() // 创建管理插件实例并启用 XSS 过滤
 
-	template.AddComp(chartjs.NewChart())
+	// 添加用户表生成器
+	adminPlugin.AddGenerator("user", tables.GetUserTable) // 添加用户表生成器
 
-	if err := eng.AddConfigFromJSON(os.Args[len(os.Args)-1]).
-		AddPlugins(adminPlugin).
-		Use(router); err != nil {
-		panic(err)
+	// 添加 Chart.js 图表组件到模板
+	template.AddComp(chartjs.NewChart()) // 添加 Chart.js 图表组件
+
+	// 从命令行最后一个参数加载 JSON 配置，添加插件，并将引擎应用到 FastHTTP 路由器
+	if err := eng.AddConfigFromJSON(os.Args[len(os.Args)-1]). // 从 JSON 文件加载配置
+									AddPlugins(adminPlugin).  // 添加管理插件
+									Use(router); err != nil { // 将引擎应用到 FastHTTP 路由器
+		panic(err) // 如果失败，触发 panic
 	}
 
-	eng.HTML("GET", "/admin", tables.GetContent)
+	// 注册 HTML 路由，用于显示自定义内容
+	eng.HTML("GET", "/admin", tables.GetContent) // 注册 HTML 路由
 
-	return func(ctx *fasthttp.RequestCtx) {
-		router.Handler(ctx)
+	// 返回 FastHTTP 请求处理器函数
+	return func(ctx *fasthttp.RequestCtx) { // 返回请求处理器函数
+		router.Handler(ctx) // 使用路由器处理请求
 	}
 }
 
+// NewHandler 创建新的HTTP请求处理器
+// 参数:
+//   - dbs: 数据库连接配置列表，包含数据库连接信息
+//   - gens: 表生成器列表，包含所有需要管理的表的定义
+//
+// 返回值:
+//   - fasthttp.RequestHandler: FastHTTP请求处理器，用于处理HTTP请求
+//
+// 说明：
+//
+//	该函数创建一个支持自定义配置的 HTTP 请求处理器。
+//	它允许用户自定义数据库连接和表生成器。
+//
+// 功能特性：
+//   - 创建 FastHTTP 路由器实例
+//   - 初始化 GoAdmin 默认引擎
+//   - 添加管理插件
+//   - 支持自定义数据库配置
+//   - 支持自定义表生成器
+//   - 配置存储路径和前缀
+//   - 配置语言和主题
+//   - 添加 Chart.js 图表组件
+//   - 设置自定义 HTML 内容
+//
+// 配置说明：
+//   - URL 前缀: /admin
+//   - 存储路径: ./uploads
+//   - 存储前缀: uploads
+//   - 语言: 英语
+//   - 索引URL: /
+//   - 调试模式: 启用
+//   - 主题: AdminLTE 黑色皮肤
+//   - HTML 路由: GET /admin
+//
+// 技术细节：
+//   - 使用 fasthttprouter.New() 创建 FastHTTP 路由器实例
+//   - 使用 engine.Default() 创建默认引擎实例
+//   - 使用 admin.NewAdmin() 创建管理插件实例
+//   - 使用 eng.AddConfig() 添加配置
+//   - 使用 eng.AddAdapter() 添加 FastHTTP 适配器
+//   - 使用 eng.AddGenerators() 添加表生成器
+//   - 使用 eng.AddPlugins() 添加插件
+//   - 使用 eng.Use() 将引擎应用到 FastHTTP 路由器
+//   - 使用 template.AddComp() 添加模板组件
+//   - 使用 eng.HTML() 注册 HTML 路由
+//
+// 使用场景：
+//   - 生产环境
+//   - 开发环境
+//   - 自定义配置场景
+//   - 多数据库场景
+//
+// 注意事项：
+//   - 需要确保数据库连接信息正确
+//   - 需要确保上传目录存在且有写入权限
+//   - 表生成器需要正确定义
+//
+// 错误处理：
+//   - 如果配置添加失败，会触发 panic
+//   - 如果适配器添加失败，会触发 panic
+//   - 如果表生成器添加失败，会触发 panic
+//   - 如果插件添加失败，会触发 panic
+//   - 如果引擎应用失败，会触发 panic
+//
+// 示例：
+//
+//	// 配置数据库连接
+//	dbs := config.DatabaseList{
+//	    {
+//	        Driver: "mysql",
+//	        Host:   "localhost",
+//	        Port:   "3306",
+//	        User:   "root",
+//	        Pass:   "password",
+//	        Name:   "goadmin",
+//	    },
+//	}
+//
+//	// 配置表生成器
+//	gens := table.GeneratorList{
+//	    "user": tables.GetUserTable,
+//	}
+//
+//	// 创建处理器
+//	handler := NewHandler(dbs, gens)
+//
+//	// 使用处理器处理请求
+//	ctx := &fasthttp.RequestCtx{}
+//	ctx.Request.SetRequestURI("/admin")
+//	handler(ctx)
 func NewHandler(dbs config.DatabaseList, gens table.GeneratorList) fasthttp.RequestHandler {
-	router := fasthttprouter.New()
+	// 创建 FastHTTP 路由器实例
+	router := fasthttprouter.New() // 创建 FastHTTP 路由器实例
 
-	eng := engine.Default()
+	// 创建 GoAdmin 默认引擎实例
+	eng := engine.Default() // 创建默认引擎实例
 
-	template.AddComp(chartjs.NewChart())
+	// 添加 Chart.js 图表组件到模板
+	template.AddComp(chartjs.NewChart()) // 添加 Chart.js 图表组件
 
-	if err := eng.AddConfig(&config.Config{
-		Databases: dbs,
-		UrlPrefix: "admin",
-		Store: config.Store{
-			Path:   "./uploads",
-			Prefix: "uploads",
+	// 添加配置，添加 FastHTTP 适配器，添加表生成器，并将引擎应用到 FastHTTP 路由器
+	if err := eng.AddConfig(&config.Config{ // 添加配置
+		Databases: dbs,     // 设置数据库连接配置
+		UrlPrefix: "admin", // 设置 URL 前缀为 /admin
+		Store: config.Store{ // 配置文件存储
+			Path:   "./uploads", // 设置上传文件存储路径
+			Prefix: "uploads",   // 设置上传文件访问前缀
 		},
-		Language:    language.EN,
-		IndexUrl:    "/",
-		Debug:       true,
-		ColorScheme: adminlte.ColorschemeSkinBlack,
+		Language:    language.EN,                   // 设置语言为英语
+		IndexUrl:    "/",                           // 设置索引 URL
+		Debug:       true,                          // 启用调试模式
+		ColorScheme: adminlte.ColorschemeSkinBlack, // 设置主题为 AdminLTE 黑色皮肤
 	}).
-		AddAdapter(new(ada.Fasthttp)).
-		AddGenerators(gens).
-		Use(router); err != nil {
-		panic(err)
+		AddAdapter(new(ada.Fasthttp)). // 添加 FastHTTP 适配器
+		AddGenerators(gens).           // 添加表生成器
+		AddPlugins(admin.NewAdmin()).  // 添加管理插件
+		Use(router); err != nil {      // 将引擎应用到 FastHTTP 路由器
+		panic(err) // 如果失败，触发 panic
 	}
 
-	eng.HTML("GET", "/admin", tables.GetContent)
+	// 注册 HTML 路由，用于显示自定义内容
+	eng.HTML("GET", "/admin", tables.GetContent) // 注册 HTML 路由
 
-	return func(ctx *fasthttp.RequestCtx) {
-		router.Handler(ctx)
+	// 返回 FastHTTP 请求处理器函数
+	return func(ctx *fasthttp.RequestCtx) { // 返回请求处理器函数
+		router.Handler(ctx) // 使用路由器处理请求
 	}
 }

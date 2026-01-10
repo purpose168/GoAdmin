@@ -1,30 +1,45 @@
 {{define "choose_map"}}
     <script>
+        // 监听Select2选择事件
         $("select.{{.Field}}").on("select2:select", function (e) {
+            // 遍历映射数据
             {{range $val, $object := .Data}}
 
+            // 如果需要隐藏字段
             {{if $object.Hide}}
 
+            // 检查选中的值是否匹配指定值
             if (e.params.data.text === "{{$val}}" || e.params.data.id === "{{$val}}") {
+                // 隐藏指定字段的父元素
                 $("label[for='{{$object.Field}}']").parent().hide()
             } else {
+                // 显示指定字段的父元素
                 $("label[for='{{$object.Field}}']").parent().show()
             }
 
+            // 如果需要禁用字段
             {{else if $object.Disable}}
 
+            // 检查选中的值是否匹配指定值
             if (e.params.data.text === "{{$val}}" || e.params.data.id === "{{$val}}") {
+                // 禁用指定字段
                 $("label[for='{{$object.Field}}']").prop('disabled', true);
             } else {
+                // 启用指定字段
                 $("label[for='{{$object.Field}}']").prop('disabled', false);
             }
 
+            // 否则设置字段值
             {{else}}
 
+            // 检查选中的值是否匹配指定值
             if (e.params.data.text === "{{$val}}" || e.params.data.id === "{{$val}}") {
+                // 如果是选择框元素
                 if ($("select.{{$object.Field}}").length > 0) {
+                    // 设置选择框的值并初始化Select2
                     $("select.{{$object.Field}}").val("{{$object.Value}}").select2()
                 } else {
+                    // 否则设置普通输入框的值
                     $("#{{$object.Field}}").val("{{$object.Value}}")
                 }
             }

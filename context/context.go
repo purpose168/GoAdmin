@@ -42,21 +42,21 @@
 package context
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"math"
-	"net"
-	"net/http"
-	"net/url"
-	"os"
-	"path"
-	"strings"
-	"time"
+	"bytes"         // 字节缓冲区操作，用于处理字节数据
+	"encoding/json" // JSON编解码，用于JSON数据的序列化和反序列化
+	"errors"        // 错误处理，提供标准错误类型和错误创建函数
+	"fmt"           // 格式化I/O，用于字符串格式化和输出
+	"io"            // 基础I/O接口，提供输入输出操作的抽象
+	"math"          // 数学运算，提供数学常数和函数
+	"net"           // 网络基础类型，提供IP地址等网络相关类型
+	"net/http"      // HTTP客户端和服务器，提供HTTP请求和响应处理
+	"net/url"       // URL解析和查询，提供URL解析和构建功能
+	"os"            // 操作系统接口，提供文件系统访问等功能
+	"path"          // 路径操作，提供文件路径处理功能
+	"strings"       // 字符串操作，提供字符串处理函数
+	"time"          // 时间和日期，提供时间处理和格式化功能
 
-	"github.com/purpose168/GoAdmin/modules/constant"
+	"github.com/purpose168/GoAdmin/modules/constant" // GoAdmin常量定义，包含框架使用的各种常量
 )
 
 const abortIndex int8 = math.MaxInt8 / 2

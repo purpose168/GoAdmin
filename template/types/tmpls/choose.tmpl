@@ -1,10 +1,15 @@
 {{define "choose"}}
     <script>
+        // 监听Select2选择事件
         $("select.{{.Field}}").on("select2:select", function (e) {
+            // 检查选中的值是否匹配指定值
             if (e.params.data.text === {{.Val}} || e.params.data.id === {{.Val}}) {
+                // 如果是选择框元素
                 if ($("select.{{.ChooseField}}").length > 0) {
+                    // 设置选择框的值并初始化Select2
                     $("select.{{.ChooseField}}").val("{{.Value}}[0]").select2()
                 } else {
+                    // 否则设置普通输入框的值
                     $(".{{.ChooseField}}").val({{.Value}})
                 }
             }
